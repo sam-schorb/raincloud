@@ -38,13 +38,6 @@ app.use(cors({
     credentials: true
 }));
 
-// **Serve React's Static Files in Production**
-if (process.env.NODE_ENV === 'production') {
-  app.use(express.static('build')); 
-  app.get('*', (req, res) => {
-    res.sendFile(path.resolve(__dirname, 'build', 'index.html')); 
-  });
-}
 
 // Initialize Mailjet
 const mailjet = Mailjet.apiConnect(
@@ -1008,11 +1001,19 @@ app.get('/userLikes/:userId', async (req, res) => {
     }
 });
 
+if (process.env.NODE_ENV === 'production') {
+    app.use(express.static('build'));
 
-
-app.get('*', (req, res) => {
-    res.sendFile(path.join(__dirname, '../public/index.html'));
-});
+    // This is your fallback route for production. It should come AFTER your API routes.
+    app.get('*', (req, res) => {
+        res.sendFile(path.resolve(__dirname, 'build', 'index.html'));
+    });
+} else {
+    // For non-production environments, serve your development index.html
+    app.get('*', (req, res) => {
+        res.sendFile(path.join(__dirname, '../public/index.html'));
+    });
+}
 
 app.listen(PORT, () => {
     console.log(`Server is running on http://localhost:${PORT}`);
