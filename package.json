@@ -42,7 +42,7 @@
     "start": "NODE_ENV=production node server/server.js",
     "start:dev": "npm run build:css && react-scripts start",
     "server": "node server/server.js",
-    "heroku-postbuild": "cd /Users/clam/Documents/Max8.5/RNBOwebsite20-spotifyGoingOnline && npm install && npm run build",
+    "heroku-postbuild": "npm install && npm run build",
     "build": "react-scripts build",
     "build:css": "tailwind build src/styles.css -o dist/styles.css",
     "dev": "concurrently \"npm run server\" \"npm start:dev\"",
