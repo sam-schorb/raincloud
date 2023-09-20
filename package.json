@@ -16,6 +16,7 @@
     "express-rate-limit": "^7.0.1",
     "helmet": "^7.0.0",
     "jsonwebtoken": "^9.0.1",
+    "multer": "^1.4.5-lts.1",
     "node-mailjet": "^6.0.4",
     "nodemailer": "^6.9.4",
     "postcss": "^8.4.29",
@@ -44,7 +45,6 @@
     "test": "react-scripts test",
     "eject": "react-scripts eject"
   },
-  
   "eslintConfig": {
     "extends": [
       "react-app",
