@@ -25,7 +25,7 @@ app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
 // CORS Configuration
-const allowedOrigins = ['https://localhost:3000', 'https://www.iimaginary.com'];
+const allowedOrigins = ['https://localhost:3000', 'https://www.iimaginary.com','https://droplets-bc07b656285d.herokuapp.com'];
 app.use(cors({
     origin: (origin, callback) => {
         if (!origin) return callback(null, true);

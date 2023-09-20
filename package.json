@@ -34,15 +34,17 @@
     "zlib": "^1.0.5"
   },
   "scripts": {
-    "start": "npm run build:css && react-scripts start",
-    "start:prod": "NODE_ENV=production node server/server.js",
+    "start": "NODE_ENV=production node server/server.js",
+    "start:dev": "npm run build:css && react-scripts start",
     "server": "node server/server.js",
-    "build": "npm run build:css && react-scripts build",
+    "heroku-postbuild": "npm run build:css && react-scripts build",
+    "build": "react-scripts build",
     "build:css": "tailwind build src/styles.css -o dist/styles.css",
-    "dev": "concurrently \"npm run server\" \"npm start\"",
+    "dev": "concurrently \"npm run server\" \"npm start:dev\"",
     "test": "react-scripts test",
     "eject": "react-scripts eject"
   },
+  
   "eslintConfig": {
     "extends": [
       "react-app",
