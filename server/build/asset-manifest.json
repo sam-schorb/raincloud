@@ -1,0 +1,14 @@
+{
+  "files": {
+    "main.css": "/static/css/main.e5ebc98e.css",
+    "main.js": "/static/js/main.387ef65b.js",
+    "static/media/iimaginaryLogoDarkGray.jpeg": "/static/media/iimaginaryLogoDarkGray.dd1d07796d532cb8cbcf.jpeg",
+    "index.html": "/index.html",
+    "main.e5ebc98e.css.map": "/static/css/main.e5ebc98e.css.map",
+    "main.387ef65b.js.map": "/static/js/main.387ef65b.js.map"
+  },
+  "entrypoints": [
+    "static/css/main.e5ebc98e.css",
+    "static/js/main.387ef65b.js"
+  ]
+}
