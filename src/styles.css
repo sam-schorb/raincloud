@@ -1,0 +1,33 @@
+@import url('https://fonts.googleapis.com/css2?family=Roboto:wght@400;700&display=swap');
+
+@import "tailwindcss/base";
+@import "tailwindcss/components";
+@import "tailwindcss/utilities";
+
+body {
+    padding: 0;
+    height: auto; /* Instead of 100vh so that it can grow with content */
+    min-height: 100vh; /* Ensures it's at least the height of the viewport */
+  }
+
+  
+.tab-button {
+    background-color: #999999;
+    color: #333333;
+    border: none;
+    padding: 10px 10px;
+    border-radius: 0px;
+    margin: 0;
+}
+
+.tab-button.active {
+    background-color: #cccccc;
+}
+
+.tab-button:hover {
+    background-color: #bbbbbb;
+}
+
+.playbar-visible {
+    padding-bottom: 5rem; /* Assuming playbar's height is 20px */
+}

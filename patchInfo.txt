@@ -1,0 +1,12 @@
+playbar uses it as a single to render info for currently playing song - should still be able to search for a single patch
+
+recentlyAdded uses patchInfo as an input to slice the first 8 items - first 8 patches need to remain stored even as other items are loaded - working
+
+metadata Modal uses fetchPatchInfo to refresh patch list after patch has been uploaded - patch list should reininitialise after a new patch is uploaded with the new item added
+
+list uses patchinfo extensively to create the list - needs a revamped route with pagination built in at server end
+
+app.js uses patchinfo to pass to serach then list - check this is where the patchInfoSlice is being populated. Make sure the fetch it only happening once. Make sure all components can get the info they need after patchInfo is paginated.
+
+
+upload needs to start adding new items to the start of the database - is this awkward? - no
