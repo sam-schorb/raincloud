@@ -17,7 +17,8 @@ dotenv.config();
 
 // **Initialization**
 const app = express();
-const PORT = 3001;
+const PORT = process.env.PORT || 3001; // Use default port if not on Heroku
+
 
 // **Middlewares**
 app.use(cookieParser());
