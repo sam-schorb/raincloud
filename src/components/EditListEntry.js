@@ -74,7 +74,7 @@ const EditListEntry = ({ singlePatchInfo, handleOpenModal, handlePatchDeleted })
                 <span className="col-span-3 md:col-span-2 lg:col-span-3 xl:col-span-3 truncate">
                     {singlePatchInfo.name}
                 </span>
-                <span className="col-span-1 text-right opacity-0 sm:opacity-0 md:opacity-100 overflow-hidden">
+                <span className="col-span-1 text-right opacity-0 md:opacity-0 lg:opacity-100 overflow-hidden">
                     {timeSince(new Date(singlePatchInfo.uploadDate))}
                 </span>
                 <div className="flex justify-end items-center col-span-5">
@@ -83,21 +83,21 @@ const EditListEntry = ({ singlePatchInfo, handleOpenModal, handlePatchDeleted })
                         className="flex items-center px-2 py-1 bg-transparent border-0 rounded text-green-500 hover:text-green-400"
                     >
                         <FaPlay size="1.5em" />
-                        <span className="ml-1">Play</span>
+                        <span className="ml-1 sm:hidden md:inline">Play</span>
                     </button>
                     <button 
                         onClick={handleEditButtonClick}
                         className="flex items-center px-2 py-1 bg-transparent border-0 rounded text-blue-500 hover:text-blue-400 ml-3"
                     >
                         <MdEdit size="1.5em" />
-                        <span className="ml-1">Edit</span>
+                        <span className="ml-1 sm:hidden md:inline">Edit</span>
                     </button>
                     <button 
                         onClick={handleDeletePatch}
                         className="flex items-center px-2 py-1 bg-transparent border-0 rounded text-red-500 hover:text-red-400 ml-3"
                     >
                         <AiFillDelete size="1.5em" />
-                        <span className="ml-1">Delete</span>
+                        <span className="ml-1 sm:hidden md:inline">Delete</span>
                     </button>
                 </div>
             </li>
@@ -108,7 +108,7 @@ const EditListEntry = ({ singlePatchInfo, handleOpenModal, handlePatchDeleted })
 EditListEntry.propTypes = {
     singlePatchInfo: PropTypes.object.isRequired,
     handleOpenModal: PropTypes.func.isRequired,
-    handlePatchDeleted: PropTypes.func.isRequired // New prop
+    handlePatchDeleted: PropTypes.func.isRequired
 };
 
 export default EditListEntry;
