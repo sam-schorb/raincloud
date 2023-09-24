@@ -79,7 +79,7 @@ function EditMetadataModal({ isOpen, closeModal, patchId, fetchPatchInfo }) {
     };
 
     return (
-        <div id="metadata-modal" className={`fixed top-0 left-0 w-full h-full bg-gray-900 bg-opacity-75 flex justify-center items-center transition-opacity duration-300 ease-in-out ${isOpen ? 'block z-50' : 'hidden'}`} onClick={handleCancel}>
+        <div id="metadata-modal" className={`fixed z-52 top-0 left-0 w-full h-full bg-gray-900 bg-opacity-75 flex justify-center items-center transition-opacity duration-300 ease-in-out ${isOpen ? 'block z-50' : 'hidden'}`} onClick={handleCancel}>
             <div className="bg-gray-400 p-8 rounded-lg w-1/3 text-gray-900" onClick={e => e.stopPropagation()}>
                 <div className="flex flex-col mb-4">
                     <label>Name:</label>

@@ -1,11 +1,9 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { FaUser, FaSignOutAlt, FaEdit } from 'react-icons/fa';
 
-function UserDropdown({ handleLogout, navigate }) {
+function UserDropdown({ handleLogout, navigate }) { 
     const [isOpen, setIsOpen] = useState(false);
-    const [leftPosition, setLeftPosition] = useState(null);
     const dropdownRef = useRef(null);
-    const buttonRef = useRef(null);
 
     useEffect(() => {
         function handleOutsideClick(event) {
@@ -21,51 +19,28 @@ function UserDropdown({ handleLogout, navigate }) {
         }
     }, []);
 
-    useEffect(() => {
-        if (isOpen && dropdownRef.current && buttonRef.current) {
-            const buttonRect = buttonRef.current.getBoundingClientRect();
-            const dropdownRect = dropdownRef.current.getBoundingClientRect();
-            const spaceRight = window.innerWidth - buttonRect.right;
-            if (spaceRight < dropdownRect.width) {
-                const adjustedLeft = spaceRight - dropdownRect.width + buttonRect.width;
-                setLeftPosition(adjustedLeft);
-            } else {
-                setLeftPosition(0);
-            }
-        }
-    }, [isOpen]);
-
-    const dropdownStyle = { left: `${leftPosition}px` };
-
     return (
-        <div ref={dropdownRef} className="relative inline-block text-left">
-            <div>
-                <button
-                    ref={buttonRef}
-                    onClick={() => setIsOpen(!isOpen)}
-                    className="flex items-center text-gray-400 hover:text-white p-2 transition-colors duration-300"
-                >
-                    <FaUser className="text-icon-lg sm:text-icon-lg md:text-base lg:text-base mr-3 md:mr-5" />
-                    <span className="hidden md:inline-block">User</span>
-                </button>
+        <div ref={dropdownRef} className="relative inline-block text-left fixed top-4 right-4">
+        <div>
+            <button onClick={() => setIsOpen(!isOpen)} className="flex items-center text-gray-400 hover:text-white p-2 transition-colors duration-300">
+                <FaUser className="text-icon-lg sm:text-icon-lg md:text-base lg:text-base mr-3 md:mr-5" />
+                <span className="hidden md:inline-block">User</span>
+            </button>
             </div>
             {isOpen && (
-                <div
-                    style={dropdownStyle}
-                    className="origin-center absolute mt-2 w-56 rounded-md shadow-lg bg-white ring-1 ring-black ring-opacity-5"
-                >
+                <div className="origin-center absolute mt-2 w-56 rounded-md shadow-lg bg-white ring-1 ring-black ring-opacity-5">
                     <div className="py-1" role="menu" aria-orientation="vertical" aria-labelledby="options-menu">
-                        <button
-                            onClick={() => navigate('/managePatches')}
-                            className="w-full flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
+                        <button 
+                            onClick={() => navigate('/managePatches')} 
+                            className="w-full flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-100" 
                             role="menuitem"
                         >
                             <FaEdit className="mr-2 text-gray-400" />
                             Manage patches
                         </button>
-                        <button
-                            onClick={handleLogout}
-                            className="w-full flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
+                        <button 
+                            onClick={handleLogout} 
+                            className="w-full flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-100" 
                             role="menuitem"
                         >
                             <FaSignOutAlt className="mr-2 text-gray-400" />

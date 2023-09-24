@@ -1,17 +1,11 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect } from 'react';
 
 const Notification = ({ message, setType }) => {
   const [isVisible, setIsVisible] = useState(false);
-  const messageRef = useRef(message);  // Store the current message in a ref
 
   useEffect(() => {
-    // Check if the message has changed since the last render
-    if (messageRef.current !== message) {
-      // Clear any existing timeouts to hide or remove the notification
-      setIsVisible(true);  // Immediately show the new notification
-    }
-
-    messageRef.current = message;  // Update the ref to the current message
+    // Immediately display the notification on mount
+    setIsVisible(true);
 
     const fadeOutTimeout = setTimeout(() => {
       setIsVisible(false);
@@ -21,7 +15,7 @@ const Notification = ({ message, setType }) => {
     return () => {
       clearTimeout(fadeOutTimeout);
     };
-  }, [message]);
+  }, [message]);  // Depend on `message` to ensure effect runs with every new message.
 
   useEffect(() => {
     if (!isVisible) {

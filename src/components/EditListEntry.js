@@ -66,14 +66,14 @@ const EditListEntry = ({ singlePatchInfo, handleOpenModal, handlePatchDeleted })
               className={`grid grid-cols-12 items-center mx-auto py-1 border-b border-gray-400 gap-x-1`}
               >
                 <div className="col-span-1"></div>
-                <div>
-                <img 
-                    src={`data:image/jpeg;base64,${singlePatchInfo.image.toString('base64')}`} 
-                    alt={singlePatchInfo.name} 
-                    className="w-12 h-12 object-cover hidden md:block"
-                />
+                <div className="md:col-span-1">
+                    <img 
+                        src={`data:image/jpeg;base64,${singlePatchInfo.image.toString('base64')}`} 
+                        alt={singlePatchInfo.name} 
+                        className="w-12 h-12 object-cover hidden md:block"
+                    />
                 </div>
-                <span className="col-span-3 md:col-span-2 lg:col-span-3 xl:col-span-3 truncate">
+                <span className="col-span-4 md:col-span-3 lg:col-span-2 xl:col-span-2 truncate">
                     {singlePatchInfo.name}
                 </span>
                 <span className="col-span-1 text-right opacity-0 md:opacity-0 lg:opacity-100 overflow-hidden">

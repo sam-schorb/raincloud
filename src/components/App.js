@@ -182,8 +182,8 @@ function App() {
             <FaUpload className="text-icon-lg sm:text-icon-lg md:text-base lg:text-base mr-3 md:mr-5" /><span className="hidden md:inline-block">Upload</span>
           </div>
           {user ? (
-              <div className="text-gray-400 hover:text-white p-2 flex justify-center items-center transition-colors duration-300">
-                  <UserDropdown handleLogout={handleLogout} navigate={navigate} />
+                    <div className="text-gray-400 hover:text-white p-2 flex justify-center items-center transition-colors duration-300 fixed top-4 right-4">
+                    <UserDropdown handleLogout={handleLogout} navigate={navigate} />
               </div>
           ) : (
               <div className="text-gray-400 hover:text-white p-2 flex justify-center items-center transition-colors duration-300" onClick={openAuthModal}>
