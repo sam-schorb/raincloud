@@ -329,7 +329,7 @@ app.use((req, res, next) => {
     res.header(
         "Content-Security-Policy",
         `
-            default-src 'self' 'unsafe-inline' 'unsafe-eval';
+            default-src 'self';
             img-src 'self' data:;
             font-src 'self' data: https://fonts.gstatic.com;
             style-src 'self' 'unsafe-inline' https://fonts.googleapis.com;
@@ -338,6 +338,7 @@ app.use((req, res, next) => {
     );
     next();
 });
+
 
 
 app.get('/getPatch/:patchId', async (req, res) => {
