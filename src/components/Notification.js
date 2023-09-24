@@ -4,12 +4,12 @@ const Notification = ({ message, setType }) => {
   const [isVisible, setIsVisible] = useState(false);
 
   useEffect(() => {
-    // Immediately display the notification on mount
+    // Reset visibility and show new notification immediately
     setIsVisible(true);
 
     const fadeOutTimeout = setTimeout(() => {
       setIsVisible(false);
-    }, 3000);
+    }, 3000);  // 3 seconds duration for showing notification
 
     // Cleanup function
     return () => {
@@ -30,7 +30,7 @@ const Notification = ({ message, setType }) => {
     }
   }, [isVisible, setType]);
 
-  // Use inline styles for absolute positioning to ensure consistency.
+  // Use inline styles for absolute positioning to ensure consistency
   const notificationStyle = {
     position: 'fixed',
     bottom: '12.5%', // Position the notification 1/8 from the bottom

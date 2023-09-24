@@ -610,20 +610,12 @@ video {
   left: 1.75rem;
 }
 
-.right-4{
-  right: 1rem;
-}
-
 .top-0{
   top: 0px;
 }
 
 .top-3{
   top: 0.75rem;
-}
-
-.top-4{
-  top: 1rem;
 }
 
 .z-50{
@@ -819,6 +811,10 @@ video {
 
 .cursor-pointer{
   cursor: pointer;
+}
+
+.resize{
+  resize: both;
 }
 
 .list-disc{
@@ -1027,16 +1023,16 @@ video {
   padding: 0px;
 }
 
-.p-10{
-  padding: 2.5rem;
-}
-
 .p-2{
   padding: 0.5rem;
 }
 
 .p-4{
   padding: 1rem;
+}
+
+.p-5{
+  padding: 1.25rem;
 }
 
 .p-6{
