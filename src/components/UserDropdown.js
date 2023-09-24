@@ -3,7 +3,7 @@ import { FaUser, FaSignOutAlt, FaEdit } from 'react-icons/fa';
 
 function UserDropdown({ handleLogout, navigate }) {
     const [isOpen, setIsOpen] = useState(false);
-    const [isRightAligned, setIsRightAligned] = useState(false);
+    const [leftPosition, setLeftPosition] = useState(null);
     const dropdownRef = useRef(null);
     const buttonRef = useRef(null);
 
@@ -25,15 +25,17 @@ function UserDropdown({ handleLogout, navigate }) {
         if (isOpen && dropdownRef.current && buttonRef.current) {
             const buttonRect = buttonRef.current.getBoundingClientRect();
             const dropdownRect = dropdownRef.current.getBoundingClientRect();
-            const rightOverflow = window.innerWidth - (buttonRect.right + dropdownRect.width);
-
-            setIsRightAligned(rightOverflow < 0);
+            const spaceRight = window.innerWidth - buttonRect.right;
+            if (spaceRight < dropdownRect.width) {
+                const adjustedLeft = spaceRight - dropdownRect.width + buttonRect.width;
+                setLeftPosition(adjustedLeft);
+            } else {
+                setLeftPosition(0);
+            }
         }
     }, [isOpen]);
 
-    const dropdownStyle = isRightAligned
-        ? { right: 0 }
-        : { left: 0 };
+    const dropdownStyle = { left: `${leftPosition}px` };
 
     return (
         <div ref={dropdownRef} className="relative inline-block text-left">

@@ -66,11 +66,13 @@ const EditListEntry = ({ singlePatchInfo, handleOpenModal, handlePatchDeleted })
               className={`grid grid-cols-12 md:grid-cols-8 md:grid-cols-10 lg:grid-cols-12 xl:grid-cols-12 items-center mx-auto py-1 border-b border-gray-400 gap-x-1`}
               >
                 <div className="col-span-1"></div>
+                <div>
                 <img 
                     src={`data:image/jpeg;base64,${singlePatchInfo.image.toString('base64')}`} 
                     alt={singlePatchInfo.name} 
-                    className="col-span-1 w-12 h-12 object-cover"
+                    className="w-full h-full object-cover hidden md:block"
                 />
+                </div>
                 <span className="col-span-3 md:col-span-2 lg:col-span-3 xl:col-span-3 truncate">
                     {singlePatchInfo.name}
                 </span>
@@ -83,21 +85,21 @@ const EditListEntry = ({ singlePatchInfo, handleOpenModal, handlePatchDeleted })
                         className="flex items-center px-2 py-1 bg-transparent border-0 rounded text-green-500 hover:text-green-400"
                     >
                         <FaPlay size="1.5em" />
-                        <span className="ml-1 sm:hidden md:inline">Play</span>
+                        <span className="ml-1 hidden md:inline lg:inline xl:inline">Play</span>
                     </button>
                     <button 
                         onClick={handleEditButtonClick}
                         className="flex items-center px-2 py-1 bg-transparent border-0 rounded text-blue-500 hover:text-blue-400 ml-3"
                     >
                         <MdEdit size="1.5em" />
-                        <span className="ml-1 sm:hidden md:inline">Edit</span>
+                        <span className="ml-1 hidden md:inline lg:inline xl:inline">Edit</span>
                     </button>
                     <button 
                         onClick={handleDeletePatch}
                         className="flex items-center px-2 py-1 bg-transparent border-0 rounded text-red-500 hover:text-red-400 ml-3"
                     >
                         <AiFillDelete size="1.5em" />
-                        <span className="ml-1 sm:hidden md:inline">Delete</span>
+                        <span className="ml-1 hidden md:inline lg:inline xl:inline">Delete</span>
                     </button>
                 </div>
             </li>

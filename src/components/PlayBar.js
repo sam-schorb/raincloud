@@ -113,7 +113,7 @@ function PlayBar({ setNotificationType }) {
     if (!playingPatch) return null;
 
     return (
-<div key={playingPatch} className="fixed bottom-0 w-full h-20 bg-vdark-gray grid grid-cols-11 items-center p-4 transition-transform transform duration-500">
+<div key={playingPatch} className="fixed bottom-0 w-full h-18 bg-vdark-gray grid grid-cols-11 items-center p-4 transition-transform transform duration-500">
     <div className="col-span-4 flex items-center justify-center pr-8">
         <div className="w-full flex items-center">
             {patchInfo && (
