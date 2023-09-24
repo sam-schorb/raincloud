@@ -22,13 +22,13 @@ function UserDropdown({ handleLogout, navigate }) {
     return (
         <div ref={dropdownRef} className="relative inline-block text-left">
         <div>
-            <button onClick={() => setIsOpen(!isOpen)} className="flex items-center text-gray-400 hover:text-white p-2 transition-colors duration-300">
+            <button onClick={() => setIsOpen(!isOpen)} className="text-gray-400 hover:text-white p-2 flex justify-center items-center transition-colors duration-300">
                 <FaUser className="text-icon-lg sm:text-icon-lg md:text-base lg:text-base mr-3 md:mr-5" />
                 <span className="hidden md:inline-block">User</span>
             </button>
             </div>
             {isOpen && (
-                <div className="origin-center absolute mt-2 w-56 rounded-md shadow-lg bg-white ring-1 ring-black ring-opacity-5">
+                <div className="origin-left md:origin-left lg:origin-left xl:origin-left absolute mt-2 w-56 rounded-md shadow-lg bg-white ring-1 ring-black ring-opacity-5">
                     <div className="py-1" role="menu" aria-orientation="vertical" aria-labelledby="options-menu">
                         <button 
                             onClick={() => navigate('/managePatches')} 
