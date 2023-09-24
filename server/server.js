@@ -331,11 +331,12 @@ app.use((req, res, next) => {
         img-src 'self' data:;
         font-src 'self' data: https://fonts.gstatic.com;
         style-src 'self' 'unsafe-inline' https://fonts.googleapis.com;
-        script-src 'self' 'unsafe-inline' 'unsafe-eval' https://c74-public.nyc3.digitaloceanspaces.com;
+        script-src 'self' 'unsafe-inline' 'unsafe-eval' blob: https://c74-public.nyc3.digitaloceanspaces.com;
     `;
     res.header("Content-Security-Policy", csp.replace(/\n/g, ''));
     next();
 });
+
 
 
 
