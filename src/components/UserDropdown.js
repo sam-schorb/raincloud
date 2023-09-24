@@ -20,7 +20,7 @@ function UserDropdown({ handleLogout, navigate }) {
     }, []);
 
     return (
-        <div ref={dropdownRef} className="relative inline-block text-left fixed top-4 right-4">
+        <div ref={dropdownRef} className="relative inline-block text-left">
         <div>
             <button onClick={() => setIsOpen(!isOpen)} className="flex items-center text-gray-400 hover:text-white p-2 transition-colors duration-300">
                 <FaUser className="text-icon-lg sm:text-icon-lg md:text-base lg:text-base mr-3 md:mr-5" />
