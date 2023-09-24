@@ -1330,6 +1330,10 @@ body {
     grid-column-start: 10;
   }
 
+  .sm\:hidden{
+    display: none;
+  }
+
   .sm\:w-5\/6{
     width: 83.333333%;
   }
@@ -1376,6 +1380,10 @@ body {
     display: inline-block;
   }
 
+  .md\:inline{
+    display: inline;
+  }
+
   .md\:w-2\/3{
     width: 66.666667%;
   }
@@ -1399,6 +1407,10 @@ body {
   .md\:text-base{
     font-size: 1rem;
     line-height: 1.5rem;
+  }
+
+  .md\:opacity-0{
+    opacity: 0;
   }
 
   .md\:opacity-100{
@@ -1430,6 +1442,10 @@ body {
   .lg\:text-base{
     font-size: 1rem;
     line-height: 1.5rem;
+  }
+
+  .lg\:opacity-100{
+    opacity: 1;
   }
 }
 
