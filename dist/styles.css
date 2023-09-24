@@ -618,6 +618,10 @@ video {
   top: 0.75rem;
 }
 
+.z-40{
+  z-index: 40;
+}
+
 .z-50{
   z-index: 50;
 }
@@ -811,10 +815,6 @@ video {
 
 .cursor-pointer{
   cursor: pointer;
-}
-
-.resize{
-  resize: both;
 }
 
 .list-disc{
@@ -1075,8 +1075,8 @@ video {
   padding-right: 2rem;
 }
 
-.pt-20{
-  padding-top: 5rem;
+.pt-10{
+  padding-top: 2.5rem;
 }
 
 .text-left{

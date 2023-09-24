@@ -28,11 +28,11 @@ function UserDropdown({ handleLogout, navigate }) {
             </button>
             </div>
             {isOpen && (
-                <div className="origin-right md:origin-center lg:origin-center xl:origin-left absolute mt-2 w-56 rounded-md shadow-lg bg-white ring-1 ring-black ring-opacity-5">
+                <div className="origin-left fixed mt-3 -ml-24 md:ml-0 lg:ml-0 xl:ml-0  w-44 rounded-md shadow-lg bg-white ring-1 ring-black ring-opacity-5 ">
                     <div className="py-1" role="menu" aria-orientation="vertical" aria-labelledby="options-menu">
                         <button 
                             onClick={() => navigate('/managePatches')} 
-                            className="w-full flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-100" 
+                            className="w-full flex items-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100" 
                             role="menuitem"
                         >
                             <FaEdit className="mr-2 text-gray-400" />

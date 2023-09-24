@@ -26,17 +26,17 @@ app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
 // CORS Configuration
-const allowedOrigins = ['https://localhost:3000', 'https://www.iimaginary.com','https://droplets-bc07b656285d.herokuapp.com'];
+const allowedOrigins = [
+    'http://localhost:3000',
+    'https://localhost:3000',
+    'https://www.iimaginary.com',
+    'https://droplets-bc07b656285d.herokuapp.com'
+];
 app.use(cors({
-    origin: (origin, callback) => {
-        if (!origin) return callback(null, true);
-        if (allowedOrigins.indexOf(origin) === -1) {
-            return callback(new Error('CORS policy: Origin not allowed'), false);
-        }
-        return callback(null, true);
-    },
+    origin: allowedOrigins,
     credentials: true
 }));
+
 
 
 // Initialize Mailjet
@@ -46,9 +46,7 @@ const mailjet = Mailjet.apiConnect(
 );
 
 const mongoURL = process.env.MONGO_URL;
-const client = new MongoClient(mongoURL, {
-    useUnifiedTopology: true
-});
+const client = new MongoClient(mongoURL);
 
 // Database collections
 let patchesCollection, usersCollection, likesCollection, refreshTokensCollection;

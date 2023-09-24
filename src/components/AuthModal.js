@@ -234,7 +234,7 @@ const AuthModal = ({closeModal, setNotificationType}) => {
     };
 
     return (
-        <div className="fixed z-100 w-full h-full bg-gray-900 bg-opacity-75 flex justify-center items-start pt-10" onClick={handleOverlayClick}>
+        <div className="fixed z-50 w-full h-full bg-gray-900 bg-opacity-75 flex justify-center items-start pt-10" onClick={handleOverlayClick}>
             <div className="bg-gray-400 p-5 rounded-lg max-w-screen-sm w-full text-gray-900 lg:w-1/3" onClick={e => e.stopPropagation()}>
                 <div className="flex flex-wrap justify-between border-b-2 pb-2 mb-4 p-0">
                     <button className={`bg-gray-100 text-gray-900 py-2 px-2 mr-2 rounded ${view === 'login' ? 'bg-gray-300' : ''}`} onClick={() => setView('login')}>Login</button>
