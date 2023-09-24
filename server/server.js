@@ -325,12 +325,20 @@ app.put('/updatePatch/:patchId', authenticateJWT, upload.fields([{ name: 'patchF
 
 
 
-
-
 app.use((req, res, next) => {
-    res.header("Content-Security-Policy", "default-src 'self' 'unsafe-inline' 'unsafe-eval'; img-src 'self' data:; font-src 'self' data:; style-src 'self' 'unsafe-inline';");
+    res.header(
+        "Content-Security-Policy",
+        `
+            default-src 'self' 'unsafe-inline' 'unsafe-eval';
+            img-src 'self' data:;
+            font-src 'self' data: https://fonts.gstatic.com;
+            style-src 'self' 'unsafe-inline' https://fonts.googleapis.com;
+            script-src 'self' 'unsafe-inline' 'unsafe-eval' https://c74-public.nyc3.digitaloceanspaces.com;
+        `
+    );
     next();
 });
+
 
 app.get('/getPatch/:patchId', async (req, res) => {
     try {

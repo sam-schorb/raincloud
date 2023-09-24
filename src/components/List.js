@@ -69,13 +69,11 @@ const List = ({ searchTerm }) => {
 
     }, [patchInfo, userId]);
 
-    // handleSearch function is not needed anymore
-
-    // Filtering patches based on the search term
-    const filteredPatchInfo = patchInfo.filter(patch =>
+    const filteredPatchInfo = Array.isArray(patchInfo) 
+    ? patchInfo.filter(patch =>
         patch.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        patch.username.toLowerCase().includes(searchTerm.toLowerCase())
-    );
+        patch.username.toLowerCase().includes(searchTerm.toLowerCase()))
+    : [];
 
     return (
         <div className="w-full mx-auto text-left">
