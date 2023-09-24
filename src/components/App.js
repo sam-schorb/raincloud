@@ -193,8 +193,8 @@ function App() {
         </div>
         </div>
 
-        {isAuthModalOpen && <AuthModal closeModal={closeAuthModal} setNotificationType={setNotificationType} />}
-        <MetadataModal isOpen={isMetadataModalOpen} closeModal={() => setIsMetadataModalOpen(false)} fetchPatchInfo={fetchPatchInfo} />
+        {isAuthModalOpen && <div className="z-100"><AuthModal closeModal={closeAuthModal} setNotificationType={setNotificationType} /></div>}
+        <div className="z-40"><MetadataModal isOpen={isMetadataModalOpen} closeModal={() => setIsMetadataModalOpen(false)} fetchPatchInfo={fetchPatchInfo} /></div>
         <Setup patchNumber={patchNumber} />
         <Routes>
           <Route path="/reset-password" element={<ResetPasswordForm />} />
