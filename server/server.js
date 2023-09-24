@@ -1010,7 +1010,7 @@ app.get('/userLikes/:userId', async (req, res) => {
 });
 
 if (process.env.NODE_ENV === 'production') {
-    app.use(express.static('build'));
+    app.use('/static', express.static(path.resolve(__dirname, 'build/static')));
 
     // This is your fallback route for production. It should come AFTER your API routes.
     app.get('*', (req, res) => {
