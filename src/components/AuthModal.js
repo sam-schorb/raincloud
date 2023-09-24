@@ -238,6 +238,7 @@ const AuthModal = ({closeModal, setNotificationType}) => {
             <div className="bg-gray-400 p-8 rounded-lg max-w-screen-sm w-full text-gray-900 lg:w-1/3" onClick={e => e.stopPropagation()}>
                 <div className="flex flex-wrap justify-between border-b-2 pb-2 mb-4 p-0">
                     <button className={`bg-gray-100 text-gray-900 py-2 px-2 mr-2 rounded ${view === 'login' ? 'bg-gray-300' : ''}`} onClick={() => setView('login')}>Login</button>
+                    <button className={`bg-gray-100 text-gray-900 py-2 px-2 mr-2 rounded ${view === 'register' ? 'bg-gray-300' : ''}`} onClick={() => setView('register')}>Register</button> {/* Added Register button */}
                     <button className={`bg-gray-100 text-gray-900 py-2 px-2 mr-2 rounded ${view === 'forgot-username' ? 'bg-gray-300' : ''}`} onClick={() => setView('forgot-username')}>Forgot Username</button>
                     <button className={`bg-gray-100 text-gray-900 py-2 px-2 mr-2 rounded ${view === 'forgot-password' ? 'bg-gray-300' : ''}`} onClick={() => setView('forgot-password')}>Reset Password</button>
                     <a href="/help" className={`bg-gray-100 text-gray-900 py-2 px-2 mr-2 rounded ${view === 'help' ? 'bg-gray-300' : ''}`}>Help</a>
