@@ -63,14 +63,14 @@ const EditListEntry = ({ singlePatchInfo, handleOpenModal, handlePatchDeleted })
         <div>
             {notificationType === 'errorDelete' && <Notification message="Error deleting patch." setType={setNotificationType} />}
             <li 
-              className={`grid grid-cols-12 md:grid-cols-8 md:grid-cols-10 lg:grid-cols-12 xl:grid-cols-12 items-center mx-auto py-1 border-b border-gray-400 gap-x-1`}
+              className={`grid grid-cols-12 items-center mx-auto py-1 border-b border-gray-400 gap-x-1`}
               >
                 <div className="col-span-1"></div>
                 <div>
                 <img 
                     src={`data:image/jpeg;base64,${singlePatchInfo.image.toString('base64')}`} 
                     alt={singlePatchInfo.name} 
-                    className="w-full h-full object-cover hidden md:block"
+                    className="w-12 h-12 object-cover hidden md:block"
                 />
                 </div>
                 <span className="col-span-3 md:col-span-2 lg:col-span-3 xl:col-span-3 truncate">

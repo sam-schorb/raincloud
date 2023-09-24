@@ -104,7 +104,7 @@ const ListEntry = ({ singlePatchInfo, userId, hasLiked, likeCount }) => {
                             <img 
                                 src={`data:image/jpeg;base64,${singlePatchInfo.image.toString('base64')}`} 
                                 alt={singlePatchInfo.name} 
-                                className="w-full h-full object-cover hidden md:block"
+                                className="w-12 h-12 object-cover hidden md:block"
                             />
                         </div>
                     )}
