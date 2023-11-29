@@ -440,13 +440,13 @@ app.get('/getLayout/:patchNumber', async (req, res) => {
 
 app.use((req, res, next) => {
     const csp = `
-        default-src 'self';
-        img-src 'self' data:;
-        font-src 'self' data: https://fonts.gstatic.com;
-        style-src 'self' 'unsafe-inline' https://fonts.googleapis.com;
-        script-src 'self' 'unsafe-inline' 'unsafe-eval' blob: https://c74-public.nyc3.digitaloceanspaces.com;
+        default-src 'self' https://raincloud-d329266a7219.herokuapp.com;
+        img-src 'self' data: https://raincloud-d329266a7219.herokuapp.com;
+        font-src 'self' data: https://fonts.gstatic.com https://raincloud-d329266a7219.herokuapp.com;
+        style-src 'self' 'unsafe-inline' https://fonts.googleapis.com https://raincloud-d329266a7219.herokuapp.com;
+        script-src 'self' 'unsafe-inline' 'unsafe-eval' blob: https://c74-public.nyc3.digitaloceanspaces.com https://raincloud-d329266a7219.herokuapp.com;
     `;
-    res.header("Content-Security-Policy", csp.replace(/\n/g, ''));
+    res.header("Content-Security-Policy", csp.replace(/\n/g, ' '));
     next();
 });
 
