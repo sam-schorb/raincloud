@@ -30,7 +30,7 @@ const allowedOrigins = [
     'http://localhost:3000',
     'https://localhost:3000',
     'https://www.iimaginary.com',
-    'https://raincloud-bc07b656285d.herokuapp.com'
+    'https://raincloud-d329266a7219.herokuapp.com/'
 ];
 app.use(cors({
     origin: allowedOrigins,
