@@ -1379,14 +1379,17 @@ app.get('/userLikes/:userId', async (req, res) => {
 });
 
 if (process.env.NODE_ENV === 'production') {
-    app.use('/static', express.static(path.resolve(__dirname, 'build/static')));
+    // Serve any static files
+    app.use(express.static(path.resolve(__dirname, '../build')));
 
-    // This is your fallback route for production. It should come AFTER your API routes.
-    app.get('*', (req, res) => {
-        res.sendFile(path.resolve(__dirname, 'build', 'index.html'));
-    });
+// Handle React routing, return all requests to React app
+app.get('*', function(req, res) {
+    res.sendFile(path.resolve(__dirname, '../build', 'index.html'));
+});
 } else {
-    // For non-production environments, serve your development index.html
+    // For non-production environments
+    // Make sure this does not interfere with API routes
+    app.use('/static', express.static(path.join(__dirname, '../public')));
     app.get('*', (req, res) => {
         res.sendFile(path.join(__dirname, '../public/index.html'));
     });
