@@ -1,10 +1,12 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useContext } from 'react';
+import { TempDataContext } from './App.js';
 
-function MetadataModal({ isOpen, closeModal, fetchPatchInfo }) {
-    const [selectedFile, setSelectedFile] = useState(null);
+function MetadataModal({ isOpen, closeModal, fetchPatchInfo, AuthModalClickNext, selectedFile, setSelectedFile }) {
+    const { tempData, setTempData } = useContext(TempDataContext);
     const [selectedImage, setSelectedImage] = useState(null);
     const [primaryTag, setPrimaryTag] = useState('');
     const [secondaryTag, setSecondaryTag] = useState('');
+    const [url, setUrl] = useState('');  // <-- New State for URL
     const options = ["synth", "sequencer", "drum machine", "sampler", "effect", "glitch", "utility", "modulation"];
 
     useEffect(() => {
@@ -23,49 +25,25 @@ function MetadataModal({ isOpen, closeModal, fetchPatchInfo }) {
         }
       }, [isOpen]);
 
-
-      const handleSave = async () => {
-        console.log("handleSave called!");
-    
+      const handleNext = () => {
         const patchName = document.getElementById('patch-name').value;
         const patchDescription = document.getElementById('patch-description').value;
-    
+        const patchUrl = document.getElementById('patch-url').value;  // <-- Capture URL
+
         if (!primaryTag && !secondaryTag) {
             alert('Please select at least one tag.');
             return;
         }
-    
         const combinedTags = [primaryTag, secondaryTag].filter(Boolean).join(", ");
-    
-        const formData = new FormData();
-        formData.append('patchFile', selectedFile);
-        formData.append('name', patchName);
-        formData.append('tags', combinedTags);
-        formData.append('description', patchDescription);
-        if (selectedImage) {
-            formData.append('imageFile', selectedImage);
-        }
-    
-        try {
-            const response = await fetch('/uploadPatch', {
-                method: 'POST',
-                body: formData
-            });
-    
-            if (response.ok) {
-                alert('Patch uploaded successfully!');
-                setSelectedFile(null);
-                fetchPatchInfo();
-    
-                // Close the modal if the patch upload was successful.
-                handleCancel();
-            } else {
-                alert('Failed to upload patch.');
-            }
-        } catch (error) {
-            console.error('Error uploading patch:', error);
-            alert('Failed to upload patch.');
-        }
+        setTempData({
+            selectedFile,
+            selectedImage,
+            patchName,
+            combinedTags,
+            patchDescription,
+            url: patchUrl  // <-- Include URL in tempData
+        });
+        AuthModalClickNext();
     };
     
 
@@ -85,13 +63,15 @@ function MetadataModal({ isOpen, closeModal, fetchPatchInfo }) {
           setSelectedFile(null);
           setPrimaryTag('');
           setSecondaryTag('');
+          setUrl('');  // <-- Clear URL state
           document.getElementById('patch-name').value = '';
           document.getElementById('patch-description').value = '';
+          document.getElementById('patch-url').value = '';  // <-- Clear URL input
           document.getElementById('patch-file').value = '';
           document.getElementById('patch-image').value = '';
           closeModal();
         }, 300);
-      };
+    };
     
 
     const handleFileChange = async (event) => {
@@ -108,7 +88,7 @@ function MetadataModal({ isOpen, closeModal, fetchPatchInfo }) {
     
 
     return (
-        <div id="metadata-modal" className={`fixed  z-50 top-0 left-0 w-full h-full bg-gray-900 bg-opacity-75 flex justify-center items-center transition-opacity duration-300 ease-in-out ${isOpen ? 'block opacity-0' : 'hidden opacity-100'}`} onClick={handleCancel}>
+        <div id="metadata-modal" className={`fixed  z-50 top-0 left-0 w-full h-full bg-true-gray bg-opacity-75 flex justify-center items-center transition-opacity duration-300 ease-in-out ${isOpen ? 'block opacity-0' : 'hidden opacity-100'}`} onClick={handleCancel}>
         <div className="bg-gray-400 p-8 rounded-lg max-w-screen-sm w-full text-gray-900 lg:w-1/3" onClick={e => e.stopPropagation()}>
                 <div className="flex flex-col mb-4">
                     <label>Patch File (Max 2mb):</label>
@@ -137,6 +117,10 @@ function MetadataModal({ isOpen, closeModal, fetchPatchInfo }) {
                     </select>
                 </div>
                 <div className="flex flex-col mb-4">
+                    <label>URL:</label>
+                    <input type="text" id="patch-url" value={url} onChange={(e) => setUrl(e.target.value)} className="border border-gray-400 p-2"/>
+                </div>
+                <div className="flex flex-col mb-4">
                     <label>Description:</label>
                     <textarea id="patch-description" className="border border-gray-400 p-2"></textarea>
                 </div>
@@ -145,7 +129,7 @@ function MetadataModal({ isOpen, closeModal, fetchPatchInfo }) {
                     <input type="file" id="patch-image" accept="image/jpeg" onChange={handleImageUpload} className="border border-gray-400 p-2"/>
                 </div>
                 <div className="flex justify-end">
-                    <button id="save-btn" onClick={handleSave} className="bg-gray-100 text-gray-900 py-2 px-4 mr-2 rounded">Save</button>
+                    <button id="next-btn" onClick={handleNext} className="bg-gray-100 text-gray-900 py-2 px-4 mr-2 rounded">Next</button>
                     <button onClick={handleCancel} className="bg-gray-100 text-gray-900 py-2 px-4 mr-2 rounded">Cancel</button>
                 </div>
             </div>

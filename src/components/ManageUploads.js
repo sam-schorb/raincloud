@@ -5,7 +5,7 @@ import { selectUser } from '../slices/userSlice';
 import { fetchUserPatchInfo } from '../slices/userSlice';
 import EditMetadataModal from './EditMetadataModal';
 
-const ManagePatches = () => {
+const ManageUploads = ({ setNotificationType }) => {
     const dispatch = useDispatch();
     const user = useSelector(selectUser);
     const userId = user ? user.id : null;
@@ -27,6 +27,7 @@ const ManagePatches = () => {
     useEffect(() => {
         if (userId) {
             dispatch(fetchUserPatchInfo(userId));
+            console.log('userId: ', userId)
         }
     }, [userId, dispatch]);
     
@@ -40,13 +41,14 @@ const ManagePatches = () => {
 
     return (
         <div className="w-5/6 xs:w-5/6 sm:w-5/6 md:w-5/6 lg:w-2/3">
-            <div className="text-2xl mb-5">Manage Patches</div>
+            <div className="text-2xl mb-5">Manage Uploads</div>
             <ul className="list-none p-0">
                 {patches.map((singlePatchInfo) => ( // Use the 'patches' state for rendering
                     <EditListEntry
                         key={singlePatchInfo._id}
                         singlePatchInfo={singlePatchInfo}
                         userId={userId}
+                        setNotificationType={setNotificationType} // Pass the function down as a prop
                         handleOpenModal={handleOpenModal}
                         handlePatchDeleted={handlePatchDeleted} // Pass the handlePatchDeleted function as a prop
                     />
@@ -62,4 +64,4 @@ const ManagePatches = () => {
     );
 };
 
-export default React.memo(ManagePatches);
+export default React.memo(ManageUploads);

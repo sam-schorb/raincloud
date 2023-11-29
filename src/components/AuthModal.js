@@ -87,32 +87,40 @@ const AuthModal = ({closeModal, setNotificationType}) => {
             return;
         }
     
-            const formData = new FormData();
-            formData.append('email', email);
-            formData.append('username', username);
-            formData.append('password', password);
-            if(profilePicture) {
-                formData.append('profilePicture', profilePicture); // change 'imageFile' to 'file' if you didn't change the input name
-            }
-
-            try {
-                const response = await fetch('/register', {
-                    method: 'POST',
-                    body: formData
-                });
+        const formData = new FormData();
+        formData.append('email', email);
+        formData.append('username', username);
+        formData.append('password', password);
+        if (profilePicture) {
+            formData.append('profilePicture', profilePicture); // Ensure the field name matches the server expectation.
+        }
     
-            let message = '';
-            
-            if (response.headers.get('Content-Type').includes('application/json')) {
+        try {
+            const response = await fetch('/register', {
+                method: 'POST',
+                body: formData,
+                // You might need to include credentials if you're handling sessions
+                // credentials: 'include'
+            });
+    
+            if (response.ok) {
+                // The response is expected to be in JSON format
                 const data = await response.json();
-                message = data.message;
+                setNotificationType(data.message); // No need for the '||' since we ensure the server sends a message
             } else {
-                message = await response.text();
+                // Handle different cases of errors
+                let message = '';
+                if (response.headers.get('Content-Type').includes('application/json')) {
+                    const data = await response.json();
+                    message = data.type; // Use the `type` property as the message
+                } else {
+                    message = 'An unexpected error occurred during registration.';
+                }
+                setNotificationType(message);
             }
-    
-            setNotificationType(message);
-            
         } catch (error) {
+            console.error('Error registering:', error);
+            // This message will only be set if there's a network issue or if response.json() throws an error
             setNotificationType('Error registering.');
         }
     };

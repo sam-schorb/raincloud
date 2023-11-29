@@ -2,7 +2,7 @@ import React from 'react';
 
 function HelpPage() {
     return (
-        <div className="w-2/3 mx-auto p-8 bg-transparent rounded-lg shadow-lg">
+        <div className="w-full md:w-2/3 lg:w-2/3 xl:w-2/3 mx-auto p-8 bg-transparent rounded-lg shadow-lg">
             <h1 className="text-3xl font-bold mb-6">Help & Support</h1>
             <p className="mb-6">If you have any questions, concerns, or technical issues, please refer to our FAQ section below. If you can't find the answer you're looking for, please feel free to contact our support team.</p>
             

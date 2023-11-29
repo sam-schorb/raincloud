@@ -30,7 +30,7 @@ const allowedOrigins = [
     'http://localhost:3000',
     'https://localhost:3000',
     'https://www.iimaginary.com',
-    'https://droplets-bc07b656285d.herokuapp.com'
+    'https://raincloud-bc07b656285d.herokuapp.com'
 ];
 app.use(cors({
     origin: allowedOrigins,
@@ -225,7 +225,7 @@ app.post('/uploadPatch', authenticateJWT, upload.fields([{ name: 'patchFile', ma
         }
 
         // Validate description
-        if (!req.body.description || typeof req.body.description !== 'string' || req.body.description.length > 320) {
+        if (!req.body.description || typeof req.body.description !== 'string' || req.body.description.length > 2500) {
             return res.status(400).send('Invalid patch description');
         }
 
@@ -241,15 +241,35 @@ app.post('/uploadPatch', authenticateJWT, upload.fields([{ name: 'patchFile', ma
         const userId = req.user.id;  // Assuming authenticateJWT middleware sets user info in req.user
         const username = req.user.username;
 
+
+        if (!req.body.uiAssociations) {
+            return res.status(400).send('UI Associations missing');
+        }
+        let uiAssociations;
+        try {
+            uiAssociations = JSON.parse(req.body.uiAssociations);
+        } catch (error) {
+            console.error('Error parsing uiAssociations:', error);
+            return res.status(400).send('Invalid uiAssociations data');
+        }
+
         const patchData = {
             name: req.body.name,
             tags: req.body.tags,
             description: req.body.description,
+            uiAssociations: uiAssociations,
             fileContent: req.files.patchFile[0].buffer.toString('utf-8'), // Convert file buffer to string
             image: req.files.imageFile ? req.files.imageFile[0].buffer : null, // Save the image file as binary data if it exists
             userId: userId,
             username: username,
-            uploadDate: currentDateTime
+            uploadDate: currentDateTime,
+            likeCount: 0,  // Initialize likeCount attribute to 0
+            layout: [],  // Empty array for layout initialization
+            colours: [],
+            comments: [],
+            numColumns: req.body.numColumns ? parseInt(req.body.numColumns, 10) : 16, // Set to provided value or default to 16
+            showLabel: req.body.showLabel !== undefined ? req.body.showLabel === 'true' : true, // Set to provided value or default to true
+
         };
 
         await patchesCollection.insertOne(patchData);
@@ -280,6 +300,7 @@ app.delete('/deletePatch/:patchId', authenticateJWT, async (req, res) => {
     }
 });
 
+
 // UPDATE patch route
 app.put('/updatePatch/:patchId', authenticateJWT, upload.fields([{ name: 'patchFile', maxCount: 1 }, { name: 'imageFile', maxCount: 1 }]), async (req, res) => {
     const patchId = req.params.patchId;
@@ -291,7 +312,7 @@ app.put('/updatePatch/:patchId', authenticateJWT, upload.fields([{ name: 'patchF
         }
 
         // Validate description
-        if (!req.body.description || typeof req.body.description !== 'string' || req.body.description.length > 320) {
+        if (!req.body.description || typeof req.body.description !== 'string' || req.body.description.length > 2500) {
             return res.status(400).send('Invalid patch description');
         }
 
@@ -321,6 +342,100 @@ app.put('/updatePatch/:patchId', authenticateJWT, upload.fields([{ name: 'patchF
     }
 });
 
+app.post('/postComment', authenticateJWT, async (req, res) => {
+    try {
+        const patchId = req.body.patchId;
+        const userId = req.user.id;
+        const username = req.user.username;
+        const commentText = req.body.comment;
+        const dateTime = new Date();
+
+        const comment = {
+            comment: commentText,
+            date: dateTime.toISOString().slice(0, 10), // Returns YYYY-MM-DD
+            userId: userId,
+            username: username,
+        };
+
+        await patchesCollection.updateOne({ _id: new ObjectId(patchId) }, { $push: { comments: comment } });
+        res.status(200).send('Comment added successfully');
+    } catch (error) {
+        console.error('Error posting comment:', error);
+        res.status(500).send('Internal Server Error');
+    }
+});
+
+app.get('/getComments', async (req, res) => {
+    try {
+        const patchId = req.query.patchId;
+        const patch = await patchesCollection.findOne({ _id: new ObjectId(patchId) });
+        if (patch && patch.comments) {
+            res.status(200).json(patch.comments);
+        } else {
+            res.status(404).send('Comments not found for this patchId');
+        }
+    } catch (error) {
+        console.error('Error fetching comments:', error);
+        res.status(500).send('Internal Server Error');
+    }
+});
+
+
+app.put('/updateLayout/:patchNumber', authenticateJWT, async (req, res) => {
+    try {
+        const { patchNumber } = req.params;
+        const { layout, numColumns, showLabel } = req.body;
+
+        if (!layout || !Array.isArray(layout)) {
+            return res.status(400).send('Invalid layout data');
+        }
+
+        const updateData = {
+            layout: layout,
+            numColumns: numColumns,
+            showLabel: showLabel
+        };
+
+        const result = await patchesCollection.updateOne(
+            { _id: new ObjectId(patchNumber) },
+            { $set: updateData }
+        );
+
+        if (result.modifiedCount === 1) {
+            res.status(200).send('Layout updated successfully');
+        } else {
+            res.status(404).send('Patch not found');
+        }
+        
+    } catch (error) {
+        console.error('Error updating layout:', error);
+        res.status(500).send('Internal Server Error');
+    }
+});
+
+
+app.get('/getLayout/:patchNumber', async (req, res) => {
+    try {
+        const { patchNumber } = req.params;
+
+        const patch = await patchesCollection.findOne({ _id: new ObjectId(patchNumber) });
+
+        if (patch) {
+            res.status(200).json({
+                layout: patch.layout,
+                numColumns: patch.numColumns,
+                showLabels: patch.showLabel
+            });
+        } else {
+            res.status(404).send('Patch not found');
+        }
+
+    } catch (error) {
+        console.error('Error fetching layout:', error);
+        res.status(500).send('Internal Server Error');
+    }
+});
+
 
 
 app.use((req, res, next) => {
@@ -334,8 +449,6 @@ app.use((req, res, next) => {
     res.header("Content-Security-Policy", csp.replace(/\n/g, ''));
     next();
 });
-
-
 
 
 app.get('/getPatch/:patchId', async (req, res) => {
@@ -357,6 +470,27 @@ app.get('/getPatch/:patchId', async (req, res) => {
         res.status(500).send('Internal Server Error');
     }
 });
+
+
+app.get('/getPatchCreator/:patchId', async (req, res) => {
+    try {
+        console.log("Fetching creator for patch ID:", req.params.patchId);
+
+        const patchId = req.params.patchId;
+        const patch = await patchesCollection.findOne({ _id: new ObjectId(patchId) }, { projection: { userId: 1 } });
+
+        if (patch) {
+            res.status(200).json({ creator: patch.userId });
+        } else {
+            res.status(404).send('Patch not found');
+        }
+    } catch (error) {
+        console.error('Error fetching patch creator:', error);
+        res.status(500).send('Internal Server Error');
+    }
+});
+
+
 
 app.get('/getPatches', async (req, res) => {
     try {
@@ -380,7 +514,7 @@ app.get('/getPatchInfo', async (req, res) => {
         const patchesInfo = await patchesCollection.find(
             query,
             {
-                projection: { _id: 1, name: 1, username: 1, uploadDate: 1, image: 1 }
+                projection: { _id: 1, name: 1, username: 1, uploadDate: 1, description: 1, tags: 1, likeCount: 1 }
             }
         )
         .sort({ uploadDate: -1 })  // Sorting by uploadDate in descending order
@@ -392,6 +526,102 @@ app.get('/getPatchInfo', async (req, res) => {
         res.status(500).send('Internal Server Error');
     }
 });
+
+const ITEMS_PER_PAGE = 10;
+
+app.get('/getPaginatedPatchInfo', async (req, res) => {
+    console.log('Route /getPaginatedPatchInfo triggered');
+
+    try {
+        let query = {};
+        const page = parseInt(req.query.page) || 1;
+        console.log(`Page: ${page}`);
+
+        const searchTerm = req.query.searchTerm;
+        console.log(`Search Term: ${searchTerm}`);
+
+        const tags = req.query.tags 
+        ? req.query.tags.toLowerCase().split(',').map(tag => tag.trim()) 
+        : [];
+        console.log(`Tags: ${tags.join(', ')}`);
+
+        if (!tags.includes("all") && tags.length) {
+            let tagRegexQueries = tags.map(tag => ({ tags: { "$regex": "\\b" + tag + "\\b", "$options": "i" } }));
+            query.$or = tagRegexQueries;
+        }
+
+        if (req.query.id) {
+            query._id = new ObjectId(req.query.id);
+            console.log(`Query by ID: ${query._id}`);
+        }
+
+        if (searchTerm && searchTerm.trim() !== "") {
+            query.$or = [
+                { name: new RegExp(searchTerm, 'i') },
+                { username: new RegExp(searchTerm, 'i') }
+            ];
+        }
+
+        console.log(`Formed Query: ${JSON.stringify(query)}`);
+
+        let sortQuery = { uploadDate: -1 }; // Default sorting by uploadDate in descending order
+        console.log(`Default Sort Query: ${JSON.stringify(sortQuery)}`);
+
+        switch (req.query.sortMethod) {
+            case 'random':
+                console.log('Sort Method: random');
+                break;
+            case 'highestRated':
+                sortQuery = { likeCount: -1 };
+                console.log('Sort Method: highestRated');
+                break;
+        }
+
+        console.log(`Final Sort Query: ${JSON.stringify(sortQuery)}`);
+
+        let patchesInfo;
+        if (req.query.sortMethod === 'random') {
+            console.log('Fetching patches randomly');
+            patchesInfo = await patchesCollection.find(query).project({ _id: 1, name: 1, username: 1, uploadDate: 1, description: 1, tags: 1 }).toArray();
+            patchesInfo = shuffleArray(patchesInfo).slice((page - 1) * ITEMS_PER_PAGE, page * ITEMS_PER_PAGE);
+        } else {
+            console.log('Fetching patches with sorting');
+            patchesInfo = await patchesCollection.find(query).project({ _id: 1, name: 1, username: 1, uploadDate: 1, description: 1, tags: 1 }).sort(sortQuery).skip((page - 1) * ITEMS_PER_PAGE).limit(ITEMS_PER_PAGE).toArray();
+        }
+
+        console.log(`Fetched ${patchesInfo.length} patches`);
+
+        res.status(200).json(patchesInfo);
+    } catch (error) {
+        console.error('Error fetching paginated patch summaries:', error);
+        res.status(500).send('Internal Server Error');
+    }
+});
+
+app.get('/patchImage/:patchId', async (req, res) => {
+    try {
+      const patchId = new ObjectId(req.params.patchId);
+      const patch = await patchesCollection.findOne({ _id: patchId }, { projection: { image: 1 } });
+      if (!patch) {
+        return res.status(404).send('Patch not found');
+      }
+      res.status(200).json(patch.image); // Send only the image data
+    } catch (error) {
+      console.error('Error fetching patch image:', error);
+      res.status(500).send('Internal Server Error');
+    }
+  });
+
+
+function shuffleArray(array) {
+    for (let i = array.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [array[i], array[j]] = [array[j], array[i]];
+    }
+    return array;
+}
+
+
 
 
 // In your backend/server code, add this route
@@ -406,6 +636,51 @@ app.get('/getFullPatchInfo/:patchId', authenticateJWT, async (req, res) => {
     } catch (error) {
         console.error('Error fetching patch:', error);
         res.status(500).send('Server error');
+    }
+});
+
+// In your backend/server code, add this route
+app.get('/getTableInfo/:patchId', async (req, res) => {
+    console.log('Received patchId:', req.params.patchId);
+
+    const patchId = new ObjectId(req.params.patchId);
+    try {
+        const patch = await patchesCollection.findOne({ _id: patchId });
+        if (!patch) {
+            return res.status(404).send('Patch not found');
+        }
+
+        // Convert the image buffer to a base64 string if it exists
+        if (patch.image) {
+            patch.image = patch.image.buffer.toString('base64');
+        }
+
+        res.send(patch);
+        console.log('Fetched patch:', patch);
+
+    } catch (error) {
+        console.error('Error fetching patch:', error);
+        res.status(500).send('Server error');
+    }
+});
+
+app.get('/getUIAssociations/:patchId', async (req, res) => {
+    try {
+        console.log("Fetching UI Associations for patch ID:", req.params.patchId);
+
+        const patchId = req.params.patchId;
+        const patch = await patchesCollection.findOne({ _id: new ObjectId(patchId) });
+
+        console.log("Fetched UI Associations:", patch.uiAssociations);
+
+        if (patch && patch.uiAssociations) {
+            res.status(200).json(patch.uiAssociations);
+        } else {
+            res.status(404).send('UI Associations not found for the given patch.');
+        }
+    } catch (error) {
+        console.error('Error fetching UI Associations:', error);
+        res.status(500).send('Internal Server Error');
     }
 });
 
@@ -428,7 +703,7 @@ app.get('/getUserPatchInfo/:userId', async (req, res) => {
         const userPatches = await patchesCollection.find(
             { userId: userId },  // Using userId as string directly
             {
-                projection: { _id: 1, name: 1, username: 1, uploadDate: 1, image: 1 }
+                projection: { _id: 1, name: 1, username: 1, uploadDate: 1 }
             }
         )
         .sort({ uploadDate: -1 })  // Sorting by uploadDate in descending order
@@ -447,6 +722,73 @@ app.get('/getUserPatchInfo/:userId', async (req, res) => {
         res.status(500).send('Internal Server Error');
     }
 });
+
+
+// Route to get patches uploaded by a specific user by username
+app.get('/getArtistPatchInfo/:username', async (req, res) => {
+    const username = req.params.username;
+
+    // Error handling for missing username
+    if (!username) {
+        console.error('[ERROR] Missing username in request');
+        return res.status(400).send('Missing username');
+    }
+
+    try {
+        // First find the user by username to get the userId
+        const user = await usersCollection.findOne({ username: username });
+        if (!user) {
+            return res.status(404).send('User not found');
+        }
+
+        const userPatches = await patchesCollection.find(
+            { userId: user._id.toString() }, // Use the user's ID from the user object
+            {
+                projection: { _id: 1, name: 1, username: 1, uploadDate: 1, image: 1 }
+            }
+        )
+        .sort({ uploadDate: -1 }) // Sorting by uploadDate in descending order
+        .toArray();
+
+        if (userPatches.length > 0) {
+            console.log(`[INFO] Successfully fetched ${userPatches.length} patches for user: ${username}`);
+            res.status(200).json(userPatches);
+        } else {
+            console.log(`[INFO] No patches found for user: ${username}`);
+            res.status(200).json([]);
+        }
+    } catch (error) {
+        console.error(`[ERROR] Exception caught when fetching patches for username '${username}':`, error);
+        res.status(500).send('Internal Server Error');
+    }
+});
+
+// Fetch user information by username
+app.get('/getUserByUsername/:username', async (req, res) => {
+    const username = req.params.username;
+    try {
+        const user = await usersCollection.findOne(
+            { username: username },
+            { projection: { password: 0, verificationToken: 0 } }
+        );
+
+        if (user) {
+            // If a profile picture exists, convert the buffer to a base64 string
+            if (user.profilePicture) {
+                user.profilePicture = user.profilePicture.toString('base64');
+            }
+
+            res.json(user);
+        } else {
+            res.status(404).send('User not found');
+        }
+    } catch (error) {
+        console.error(`Error fetching user by username '${username}':`, error);
+        res.status(500).send('Internal Server Error');
+    }
+});
+
+
 
 
 
@@ -628,9 +970,6 @@ app.get('/validateToken', authenticateJWT, async (req, res) => {
 
 
 
-
-
-
 app.post('/reset-password', async (req, res) => {
     try {
         const { username, password, token } = req.body;
@@ -692,7 +1031,7 @@ app.post('/forgot-username', async (req, res) => {
                 "Messages":[{
                     "From": {
                         "Email": process.env.EMAIL_USER,
-                        "Name": "Droplets"
+                        "Name": "Raincloud"
                     },
                     "To": [{
                         "Email": email
@@ -738,7 +1077,7 @@ app.post('/forgot-password', async (req, res) => {
                 "Messages":[{
                     "From": {
                         "Email": process.env.EMAIL_USER,
-                        "Name": "Droplets"
+                        "Name": "Raincloud"
                     },
                     "To": [{
                         "Email": email
@@ -760,7 +1099,7 @@ app.post('/forgot-password', async (req, res) => {
 app.post('/register', upload.single('profilePicture'), async (req, res) => {
     try {
         const { email, username, password } = req.body;
-        const profilePicture = req.file ? req.file.buffer : null;
+        const profilePictureBuffer = req.file ? req.file.buffer : null;
 
         if (!validateInput(email, 'email')) {
             return res.status(400).send('Invalid email');
@@ -790,12 +1129,12 @@ app.post('/register', upload.single('profilePicture'), async (req, res) => {
             verificationToken,
             isVerified: false,
             recentlyPlayed: [],
-            profilePicture
+            profilePicture: profilePictureBuffer, // Store the profile picture as a buffer
         };
 
         await usersCollection.insertOne(newUser);
 
-        const verificationURL = `${process.env.FRONTEND_URL}/reset-password?token=${verificationToken}`;
+        const verificationURL = `${process.env.FRONTEND_URL}/verify-email/${verificationToken}`;
 
         const request = mailjet
             .post("send", {'version': 'v3.1'})
@@ -803,7 +1142,7 @@ app.post('/register', upload.single('profilePicture'), async (req, res) => {
                 "Messages":[{
                     "From": {
                         "Email": process.env.EMAIL_USER,
-                        "Name": "Droplets"
+                        "Name": "Raincloud"
                     },
                     "To": [{
                         "Email": email
@@ -815,12 +1154,32 @@ app.post('/register', upload.single('profilePicture'), async (req, res) => {
 
         await request;
 
-        res.status(201).send('Verification email sent. Please check your email.');
+        // Send a JSON response with a message property
+        res.status(201).json({ message: 'Verification email sent. Please check your email.' });
     } catch (error) {
-        console.error('Error registering user:', error);
-        res.status(500).send('Internal Server Error');
+        if (error instanceof multer.MulterError) {
+            // A Multer error occurred when uploading.
+            if (error.code === 'LIMIT_FILE_SIZE') {
+                // File too large
+                if (error.field === 'profilePicture') {
+                    // Profile picture file too large
+                    res.status(400).json({ type: 'Image file too large' });
+                } else {
+                    // Patch file too large
+                    res.status(400).json({ type: 'Patch file too large' });
+                }
+            } else {
+                // An unknown Multer error occurred
+                res.status(500).json({ type: 'An unexpected error occurred during file upload.' });
+            }
+        } else {
+            // An unknown error occurred
+            console.error('Error registering user:', error);
+            res.status(500).send('Internal Server Error');
+        }
     }
 });
+
 
 
 app.post('/verify-email', async (req, res) => {
@@ -846,9 +1205,6 @@ app.post('/verify-email', async (req, res) => {
 
 
 
-
-
-
 // Add a like
 app.post('/likePatch', async (req, res) => {
     const userId = req.body.userId; 
@@ -868,9 +1224,12 @@ app.post('/likePatch', async (req, res) => {
         // Insert the new like into the collection
         await likesCollection.insertOne({ userId: new ObjectId(userId), patchId: new ObjectId(patchId) });
 
-        const updatedLikeCount = await likesCollection.countDocuments({ patchId: new ObjectId(patchId) });
-        
-        res.status(200).json({ message: 'Liked successfully', updatedLikeCount });
+        // Increment the likeCount in patchesCollection
+        await patchesCollection.updateOne({ _id: new ObjectId(patchId) }, { $inc: { likeCount: 1 } });
+
+        const updatedLikeCount = await patchesCollection.findOne({ _id: new ObjectId(patchId) }, { projection: { likeCount: 1 } });
+
+        res.status(200).json({ message: 'Liked successfully', likeCount: updatedLikeCount.likeCount });
     } catch (error) {
         console.error('Error liking patch:', error);
         res.status(500).send('Internal Server Error');
@@ -890,14 +1249,18 @@ app.delete('/unlikePatch', async (req, res) => {
         // Delete the like from the collection
         await likesCollection.deleteOne({ userId: new ObjectId(userId), patchId: new ObjectId(patchId) });
 
-        const updatedLikeCount = await likesCollection.countDocuments({ patchId: new ObjectId(patchId) });
+        // Decrement the likeCount in patchesCollection
+        await patchesCollection.updateOne({ _id: new ObjectId(patchId) }, { $inc: { likeCount: -1 } });
+
+        const updatedLikeCount = await patchesCollection.findOne({ _id: new ObjectId(patchId) }, { projection: { likeCount: 1 } });
         
-        res.status(200).json({ message: 'Unliked successfully', updatedLikeCount });
+        res.status(200).json({ message: 'Unliked successfully', likeCount: updatedLikeCount.likeCount });
     } catch (error) {
         console.error('Error unliking patch:', error);
         res.status(500).send('Internal Server Error');
     }
 });
+
 
 
 app.get('/likedPatchesInfo/:userId', async (req, res) => {
@@ -916,7 +1279,7 @@ app.get('/likedPatchesInfo/:userId', async (req, res) => {
         const likedPatchesInfo = await patchesCollection.find(
             { _id: { $in: likedPatchIds } },  // Use $in operator to fetch multiple patches based on IDs
             {
-                projection: { _id: 1, name: 1, username: 1, uploadDate: 1, image: 1 }
+                projection: { _id: 1, name: 1, username: 1, uploadDate: 1 }
             }
         )
         .sort({ uploadDate: -1 })  // Sorting by uploadDate in descending order
@@ -950,24 +1313,32 @@ app.get('/likeCount/:patchId', async (req, res) => {
     }
 });
 
-app.get('/likeCounts', async (req, res) => {
-    try {
-        const aggregatedLikes = await likesCollection.aggregate([
-            { $group: { _id: "$patchId", likeCount: { $sum: 1 } } }
-        ]).toArray();
+// Get like counts for multiple patches
+app.post('/likeCounts', async (req, res) => {
+    const patchIds = req.body.patchIds;
 
-        const formattedResult = aggregatedLikes.map(item => ({
-            patchId: item._id.toString(), // convert ObjectId to string
-            likeCount: item.likeCount
+    if (!patchIds || !patchIds.length) {
+        return res.status(400).send('Missing patch IDs');
+    }
+
+    try {
+        const likeCounts = await Promise.all(patchIds.map(async (patchId) => {
+            const count = await likesCollection.countDocuments({ patchId: new ObjectId(patchId) });
+            return { patchId, count };
         }));
 
-        res.status(200).json(formattedResult);
+        const likeCountMap = likeCounts.reduce((acc, curr) => {
+            acc[curr.patchId] = curr.count;
+            return acc;
+        }, {});
 
+        res.status(200).json(likeCountMap);
     } catch (error) {
-        console.error('Error fetching all like counts:', error);
+        console.error('Error fetching like counts:', error);
         res.status(500).send('Internal Server Error');
     }
 });
+
 
 
 app.get('/hasLiked/:patchId', async (req, res) => {

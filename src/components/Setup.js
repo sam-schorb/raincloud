@@ -1,22 +1,44 @@
 /* global RNBO */
 import { useEffect, useState, useRef } from 'react';
 import { useSelector, useDispatch } from 'react-redux';
-import { selectPatchNumber } from '../slices/patchInfoSlice';
+import {  setCurrentDevice, selectCurrentDevice, selectPatchNumber } from '../slices/patchInfoSlice';
 import { updateRecentlyPlayed, selectUser } from '../slices/userSlice';
+import { selectIsUserInteracted } from '../slices/layoutSlice';
 
 const Setup = () => {
     const user = useSelector(selectUser);
     const patchNumber = useSelector(selectPatchNumber);
-    const dispatch = useDispatch();
-    const [currentDevice, setCurrentDevice] = useState(null);
+    const currentDevice = useSelector(selectCurrentDevice); // Use useSelector to get currentDevice from Redux state
     const [context, setContext] = useState(null);
     const isSettingUp = useRef(false);
 
-    const generateRandomSeedFromCurrentDate = () => {
-        const date = new Date();
-        return (date.getTime() % 1000000) / 1000000; // A random integer derived from the current time.
+    const isUserInteracted = useSelector(selectIsUserInteracted); // Use selector from Redux store
+    const dispatch = useDispatch();
+
+
+  // Effect for setting up the application after user interaction and when patchNumber changes
+  useEffect(() => {
+    const startAudioAfterUserInteraction = async () => {
+      if (isUserInteracted) {
+        const abortController = new AbortController();
+        await setupApplication();
+        return () => abortController.abort(); // This will properly abort if setupApplication is in the process
+      }
     };
 
+    startAudioAfterUserInteraction();
+  }, [isUserInteracted, patchNumber, dispatch]);
+
+
+    const generateRandomSeedFromCurrentDate = () => {
+        const date = new Date();
+        // This will get a number between 0 and 999999
+        const sixDigitNumber = date.getTime() % 1000000;
+        // This will get the last three digits of the above number and convert it back to a fraction
+        const lastThreeDigits = sixDigitNumber % 1000;
+        return lastThreeDigits / 1000; // Return the number as a fractional part.
+    };
+    
     const setRandomSeedParameterValue = (device) => {
         const param = device.parameters.find(p => p.name === 'randomSeed');
         if (param) {
@@ -28,7 +50,18 @@ const Setup = () => {
         }
     };
 
-    
+    const logRandomSeedParameterValue = () => {
+        if (currentDevice) {
+            const param = currentDevice.parameters.find(p => p.name === 'randomSeed');
+            if (param) {
+                console.log(`randomSeed value: ${param.value}`);
+            } else {
+                console.log("randomSeed parameter not found in the device.");
+            }
+        } else {
+            console.log("Device is not set. Cannot log randomSeed parameter value.");
+        }
+    };
 
     const loadRNBOScript = (version) => {
         return new Promise((resolve, reject) => {
@@ -48,7 +81,7 @@ const Setup = () => {
         if (currentDevice) {
             console.log('Disconnecting current device:', currentDevice);
             currentDevice.node.disconnect();
-            setCurrentDevice(null);
+            dispatch(setCurrentDevice(null));  // Use dispatch to update currentDevice in Redux state
         }
         if (context) {
             console.log('Closing audio context');
@@ -56,6 +89,12 @@ const Setup = () => {
             setContext(null);
         }
     };
+
+
+
+
+
+
 
     const setupApplication = async () => {
         console.log('Setting up application...');
@@ -125,10 +164,15 @@ const Setup = () => {
         const newDevice = await RNBO.createDevice({ context: newContext, patcher });
         console.log('New Device Created:', newDevice);
 
+          // Check if the newDevice is actually created
+        if (newDevice) {
+            dispatch(setCurrentDevice(newDevice)); // This should update the currentDevice state
+        }
+
         // Set randomSeed parameter value during setup
         setRandomSeedParameterValue(newDevice);
 
-        setCurrentDevice(newDevice);
+        dispatch(setCurrentDevice(newDevice));  // Use dispatch to update currentDevice in Redux state
         newDevice.node.connect(outputNode);
 
         // Update recentlyPlayed array
@@ -173,12 +217,7 @@ const Setup = () => {
         }
     };
 
-    useEffect(() => {
-        const abortController = new AbortController();
-        setupApplication();
-        return () => abortController.abort(); // This will properly abort if setupApplication is in the process
-        // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [patchNumber]);
+
 
 
     useEffect(() => {
@@ -188,6 +227,7 @@ const Setup = () => {
 
     useEffect(() => {
         console.log('Current Device Updated:', currentDevice);
+        logRandomSeedParameterValue();  // Log randomSeed parameter value whenever currentDevice is updated
     }, [currentDevice]);
 
     return null;

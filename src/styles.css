@@ -31,3 +31,26 @@ body {
 .playbar-visible {
     padding-bottom: 5rem; /* Assuming playbar's height is 20px */
 }
+
+.interact-mode .ui-resizable-handle {
+    display: none;
+  }
+
+  /* Custom styles */
+::placeholder {
+    @apply text-true-gray;
+}
+  
+
+.max-h-3\/4 {
+    max-height: 75%; /* Equivalent to 2/3 of the parent height */
+}
+
+.text-custom-gray {
+    color: #e2e2e2;
+}
+
+.dial {
+    transform: rotate(0deg);
+    will-change: transform;
+  }
