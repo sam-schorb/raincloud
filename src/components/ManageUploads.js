@@ -40,7 +40,7 @@ const ManageUploads = ({ setNotificationType }) => {
     };
 
     return (
-        <div className="w-5/6 xs:w-5/6 sm:w-5/6 md:w-5/6 lg:w-2/3">
+        <div className="w-11/12 lg:w-2/3">
             <div className="text-2xl mb-5">Manage Uploads</div>
             <ul className="list-none p-0">
                 {patches.map((singlePatchInfo) => ( // Use the 'patches' state for rendering

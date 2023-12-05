@@ -3,9 +3,7 @@ import React from 'react';
 import { useSelector } from 'react-redux';
 import { selectPatchNumber, selectPatchInfoData } from '../slices/patchInfoSlice';
 import { selectEditMode } from '../slices/modeSlice'; // Importing the mode selector
-import ToggleModeButton from './ToggleModeButton';
-import ToggleLabelButton from './ToggleLabelButton'; // Import the new component
-import NumColumnsDropdown from './NumColumnsDropdown'; // Import the new component
+
 
 function EditPatchTitle({ onSave, onCancel }) {
     const allPatchInfo = useSelector(selectPatchInfoData);
@@ -23,7 +21,7 @@ function EditPatchTitle({ onSave, onCancel }) {
             <div className="relative flex items-center justify-between h-full px-4">
                 {/* Mode Label */}
                 <div style={{ width: 'max-content' }}>
-                    <span className="text-custom-gray ml-5 text-2xl">{isEditMode ? 'Edit Mode' : 'Interact Mode'}</span>
+                    <span className="hidden sm:inline text-custom-gray ml-5 text-2xl">{isEditMode ? 'Edit Mode' : 'Interact Mode'}</span>
                 </div>
                 {/* Center: Patch title and user - Absolutely centered */}
                 <div className="absolute inset-0 flex items-center justify-center" style={{ pointerEvents: 'none' }}>
@@ -33,20 +31,6 @@ function EditPatchTitle({ onSave, onCancel }) {
                     </div>
                 </div>
                 {/* Buttons and Dropdowns */}
-
-                <div className="flex items-center space-x-4">
-                <NumColumnsDropdown />
-                <ToggleLabelButton />
-                    <ToggleModeButton />
-                    <button 
-                        className="py-2 px-4 m-4 border-2 border-medium-gray bg-true-gray hover:bg-light-gray text-dark-gray rounded" 
-                        onClick={onSave}>Save</button>
-                    <button 
-                        className="py-2 px-4 m-4 border-2 border-medium-gray bg-true-gray hover:bg-light-gray text-dark-gray rounded" 
-                        onClick={onCancel}>Cancel</button>
-                    {/* Inserted components */}
-
-                </div>
             </div>
         </div>
     );

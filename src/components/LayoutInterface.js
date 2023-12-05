@@ -14,25 +14,25 @@ import NumberBox from '../uiComponents/NumberBox';
 import { useSelector, useDispatch, Provider } from 'react-redux';
 import { store } from '../store';
 import { selectPatchNumber, setPatchNumber, selectCurrentDevice, selectPatchInfoData } from '../slices/patchInfoSlice';
-import { setOutportMessage, selectOutportMessages } from '../slices/outportMessagesSlice';
-import { selectShowLabel, selectNumColumns, setNumColumns, selectIsUserInteracted } from '../slices/layoutSlice'; // Import selectors and actions
-import { processSerializedData, getWidgetId } from '../utils/LayoutInterfaceHelpers';
+import { selectEditMode } from '../slices/modeSlice';
+import { setOutportMessage } from '../slices/outportMessagesSlice';
+import { selectShowLabel, selectNumColumns, setNumColumns, selectDropdownNumColumns, selectIsUserInteracted } from '../slices/layoutSlice'; // Import selectors and actions
 
 
-const LayoutInterface = ({ onLoaded }) => {
-  const showLabel = useSelector(selectShowLabel); // Access showLabel from Redux store
+const LayoutInterface = ( { setNotificationType } ) => {
+  const showLabel = useSelector(selectShowLabel);
   const numColumns = useSelector(selectNumColumns);
+  const dropdownNumColumns = useSelector(selectDropdownNumColumns);
+  const isUserInteracted = useSelector(selectIsUserInteracted);
   const patchInfo = useSelector(selectPatchInfoData);
+
 
   const [UIAssociations, setUIAssociations] = useState([]);
   const [patchMessage, setPatchMessage] = useState("");
   const [loading, setLoading] = useState(true);
-  const isUserInteracted = useSelector(selectIsUserInteracted);
   const [widgetAssociations, setWidgetAssociations] = useState({});
-  const [pageInitializing, setPageInitializing] = useState(false)
+  const editMode = useSelector(selectEditMode);
   const [gridInitialized, setGridInitialized] = useState(false);
-  const outportMessages = useSelector(selectOutportMessages);
-
 
   const dispatch = useDispatch();
   const patchNumber = useSelector(selectPatchNumber);
@@ -41,6 +41,98 @@ const LayoutInterface = ({ onLoaded }) => {
   const gridRef = useRef(null);
   const gridStackInstance = useRef(null);
   const rootsMap = useRef(new Map()).current;
+  const updateQueue = useRef([]);
+
+  const [gridWidth, setGridWidth] = useState(0); // State to store grid width
+  const lastWidth = useRef(0); // Ref to store the last width
+  const [responsiveNumColumns, setResponsiveNumColumns] = useState(numColumns);
+
+
+    // useEffect to handle responsiveness based on gridWidth
+    useEffect(() => {
+      let updatedNumColumns = numColumns; // Start with current numColumns
+  
+      if (gridWidth < 375) {
+        updatedNumColumns -= 8;
+      } else if (gridWidth < 640) {
+        updatedNumColumns -= 6;
+      } else if (gridWidth < 800) {
+        updatedNumColumns -= 4;
+      } else if (gridWidth < 1024) {
+        updatedNumColumns -= 2;
+      }
+  
+      // Ensure numColumns doesn't go below a certain threshold
+      updatedNumColumns = Math.max(updatedNumColumns, 2);
+  
+      setResponsiveNumColumns(updatedNumColumns); // Update responsive numColumns
+
+    }, [gridWidth, numColumns]);
+
+    // useEffect to log gridWidth changes
+useEffect(() => {
+  console.log("responsiveNumColumns:",responsiveNumColumns);
+}, [responsiveNumColumns]);
+
+  // Function to calculate margin based on window width
+  const calculateMargin = (width) => {
+    if (width < 375) {
+      return 2; // Smaller margin for very small widths
+    } else if (width < 640) {
+      return 2; // Slightly larger margin
+    } else if (width < 800) {
+      return 4; // And so on...
+    } else if (width < 1024) {
+      return 6;
+    }
+    return 10; // Default margin for larger widths
+  };
+
+  // Function to apply changes to grid stack including margins
+  const applyGridStackChanges = () => {
+    const latestUpdate = updateQueue.current.pop(); 
+    updateQueue.current = [];
+
+    if (latestUpdate && gridStackInstance.current) {
+      // Update cell height and columns
+      gridStackInstance.current.cellHeight(latestUpdate.cellHeight);
+      gridStackInstance.current.column(latestUpdate.effectiveNumColumns);
+
+      // Update margin
+      const newMargin = calculateMargin(gridWidth);
+      gridStackInstance.current.margin(newMargin);
+    }
+  };
+
+
+// Function to update gridWidth
+const updateGridWidth = () => {
+  if (gridRef.current) {
+    const currentWidth = gridRef.current.offsetWidth;
+    if (currentWidth !== lastWidth.current) {
+      setGridWidth(currentWidth); // Update state
+      lastWidth.current = currentWidth;
+    }
+  }
+};
+
+// useEffect to log gridWidth changes
+useEffect(() => {
+  console.log("Grid width changed:", gridWidth);
+}, [gridWidth]);
+
+// Add window resize listener to update gridWidth
+useEffect(() => {
+  window.addEventListener("resize", updateGridWidth);
+
+  // Initial update
+  updateGridWidth();
+
+  // Cleanup
+  return () => {
+    window.removeEventListener("resize", updateGridWidth);
+  };
+}, []); // Empty dependency array ensures this runs once on mount
 
 
   const resizeGrid = useCallback(() => {
@@ -48,19 +140,15 @@ const LayoutInterface = ({ onLoaded }) => {
       return; // Do not proceed if the grid is not initialized or if the grid ref is not attached
     }
   
-    // Calculate the width of the cells based on the new number of columns and the grid's width
-    const gridWidth = gridRef.current.offsetWidth;
-    const cellWidth = Math.round(gridWidth / numColumns);
-  
-    // Determine the height of the cells, which should match the width
+    const effectiveNumColumns = responsiveNumColumns; // Use responsiveNumColumns instead of numColumns
+    const cellWidth = Math.round(gridRef.current.offsetWidth / effectiveNumColumns);
     const cellHeight = cellWidth;
   
-    // Adjust the grid stack instance's cell height, adding extra space for the label if needed
-    gridStackInstance.current.cellHeight(cellHeight);
+    updateQueue.current.push({ cellHeight, effectiveNumColumns });
+    setTimeout(applyGridStackChanges, 300);
+  }, [gridInitialized, responsiveNumColumns, gridWidth]); // Include gridWidth in dependencies
+
   
-    // Update the number of columns in the grid stack instance
-    gridStackInstance.current.column(numColumns);
-  }, [showLabel, numColumns, gridInitialized]);
   
 // Only run the initialization when the user has interacted
 useEffect(() => {
@@ -95,45 +183,61 @@ useEffect(() => {
       }
     };
   }
-}, [isUserInteracted, patchNumber]); // Removed resizeGrid from the dependencies
+}, [isUserInteracted, patchNumber, numColumns, dropdownNumColumns, responsiveNumColumns]); // Removed resizeGrid from the dependencies
 
+
+useEffect(() => {
+  if (UIAssociations.length > 0) {
+    loadInitialLayout();
+  }
+}, [UIAssociations]);
   
 
-  useEffect(() => {
-    if (UIAssociations.length > 0) {
-      loadInitialLayout();
-    }
-  }, [UIAssociations]);
 
+const initializeGrid = useCallback(() => {
+  console.log('grid initialising - numColumns', numColumns);
 
-  const initializeGrid = useCallback(() => {
-    console.log('grid initialising');
-  
-    gridStackInstance.current = GridStack.init({
-      column: numColumns,
-      animate: false,
-      disableOneColumnMode: true,
-      float: true,
-      staticGrid: true, // Set the grid to be static
-      draggable: { ignoreContent: true },
-      resizable: {
-        handles: 'e,se,s,sw,w',
-        ignoreContent: true,
-      },
-    }, gridRef.current);
-  
+  gridStackInstance.current = GridStack.init({
+    column: numColumns,
+    animate: false,
+    disableOneColumnMode: true,
+    float: true,
+    staticGrid: true, // Set the grid to be static
+    draggable: { ignoreContent: true },
+    resizable: {
+      handles: 'e,se,s,sw,w',
+      ignoreContent: true,
+    },
+  }, gridRef.current);
     removeAllWidgets();
     setGridInitialized(true); // Set the flag here
   
     resizeGrid();
     window.addEventListener('resize', resizeGrid);
-  }, [numColumns, resizeGrid]);
-  
+    console.log('grid initialised, num columns: ', numColumns)
+  }, [ dispatch, resizeGrid]);
+
+
   useEffect(() => {
     resizeGrid();
   }, [showLabel, resizeGrid]);
 
+
+  useEffect(() => {
+    const gridStack = gridStackInstance.current;
+    if (!gridStack) return;
+
+    if (editMode) {
+      console.log('gridstack Enabled');
+      gridStack.enable();
+    } else {
+      console.log('gridstack Disabled');
+      gridStack.disable();
+    }
+  }, [editMode]);
+
   const fetchUIAssociations = async () => {
+    console.log("FetchUiAssociations called");
     if (!patchNumber) return;
 
     setUIAssociations([]);
@@ -147,6 +251,7 @@ useEffect(() => {
           type: data[key]
         }));
         setUIAssociations(formattedData);
+        console.log("UI Associations: ", formattedData);
       } else {
         console.error("Error fetching UI Associations: Response not OK");
       }
@@ -186,6 +291,29 @@ useEffect(() => {
     return widgets;
   };
 
+  const processSerializedData = (serializedData) => {
+    if (serializedData && serializedData.length > 0) {
+        return serializedData.map(data => {
+  
+            let association;
+            if (data.association) {
+                association = data.association;
+            } else {
+                association = {
+                    id: data.id.split('-')[1], // Assuming id format: 'type-id'
+                    type: data.id.split('-')[0] // Assuming id format: 'type-id'
+                };
+            }
+  
+            return {
+                ...data,
+                association
+            };
+        });
+    }
+    return [];
+  }
+
   const loadInitialLayout = async () => {
     console.log('loadInitialLayout: Function has been called.');
   
@@ -206,14 +334,12 @@ useEffect(() => {
         console.log('loadInitialLayout: JSON data parsed from response:', layoutData);
   
         if (layoutData && typeof layoutData.numColumns !== 'undefined' && typeof layoutData.showLabels !== 'undefined') {
-          console.log('loadInitialLayout: layoutData contains numColumns and showLabels, updating Redux store.');
           // Store the server value in a variable
-          const numColumnsToUse = layoutData.numColumns || 16; // default to 16 if null or undefined
-  
+          const serverNumColumns = layoutData.numColumns || 16; // default to 16 if null or undefined    
+
+    
           // Dispatch the decided value to the Redux store
-          dispatch(setNumColumns(numColumnsToUse));
-        } else {
-          console.log('loadInitialLayout: layoutData is missing numColumns or showLabels properties.');
+          dispatch(setNumColumns(serverNumColumns));
         }
   
         if (!layoutData.layout || !Array.isArray(layoutData.layout) || layoutData.layout.length === 0) {
@@ -236,9 +362,8 @@ useEffect(() => {
       setLoading(false);
     }
   };
-
-
-
+  
+  
   const loadWidgetsToGrid = widgetsToLoad => {
     console.log('Widgets to load: ', widgetsToLoad);
     
@@ -271,6 +396,8 @@ useEffect(() => {
       }
     });
   };
+  
+  
   const addWidgetWithAttributes = widgetData => {
     const elContent = `<div id="${widgetData.id}" style="width:100%; height:100%;"></div>`;
     const widgetContainer = addWidgetToGridWithAttributes(
@@ -360,7 +487,6 @@ useEffect(() => {
 };
 
   const subscribeToOutportMessages = useCallback(() => {
-    console.log('called subscribe to outports')
     if (!currentDevice) return;
     const outports = currentDevice.outports || [];
     if (currentDevice.messageEvent) {
@@ -385,13 +511,13 @@ useEffect(() => {
       }
     };
   }, [currentDevice, subscribeToOutportMessages]);
-  
-  
-  
+
+
 
   const handleSliderChange = (paramId, targetValue) => {
     const param = currentDevice?.parameters.find(p => p.id === paramId);
     if (param) {
+      console.log(param.id, ' set to: ', param.value);
       param.value = targetValue;
     }
   };
@@ -399,6 +525,7 @@ useEffect(() => {
   const handleDialChange = (paramId, targetValue) => {
     const param = currentDevice?.parameters.find(p => p.id === paramId);
     if (param) {
+      console.log(param.id, ' set to: ', param.value);
       param.value = targetValue;
     }
 };
@@ -459,11 +586,7 @@ useEffect(() => {
     }
   };
   
-  const LabelComponent = ({ associationId }) => (
-    <div style={{ height: '50px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-      <span style={{ fontSize: '24px', textAlign: 'center' }}>{associationId}</span>
-    </div>
-  );
+
   
 // Define a function that conditionally attaches event handlers to the widgets
 const attachEventHandlers = useCallback((widgetId, association, ComponentType) => {
@@ -600,26 +723,26 @@ const getComponentTypeFromWidgetId = (widgetId) => {
     );
   }
 
-    
   return (
-    <div style={{ width: '100%' }}>
-      <p>{patchMessage}</p>    
-      {loading && <p>Loading...</p>}
-      <div ref={gridRef} className={`grid-stack gs-${numColumns}`}
-        style={{ 
-          visibility: loading ? 'hidden' : 'visible', 
-        }}>
-        <style>
-          {`
-            .interact-mode .ui-resizable-handle {
-              display: none;
-            }
-          `}
-        </style>
-      </div>
+    <div key={numColumns} style={{ width: '100%' }} className={`pb-64`}>
+        <div className="flex justify-center">
+            <p>{patchMessage}</p>
+            {loading && <p>Loading...</p>}
+        </div>
+        <div ref={gridRef} className={`grid-stack gs-${numColumns}`}
+            style={{ 
+                visibility: loading ? 'hidden' : 'visible', 
+            }}>
+            <style>
+            {`
+                .interact-mode .ui-resizable-handle {
+                    display: none;
+                }
+            `}
+            </style>
+        </div>
     </div>
   );
-  };
-  
-  export default LayoutInterface;
+}
 
+export default LayoutInterface;

@@ -7,12 +7,12 @@ const Dial = ({
   min = 0,
   max = 1,
   value = 0,
+  textSizeRatio = 0.2,
   onChange = () => {},
   id
-
 }) => {
   const dialRef = useRef(null);
-  const [size, setSize] = useState(0); // This will be the size of the component
+  const [size, setSize] = useState(0);
   const [currentValue, setCurrentValue] = useState(value);
   const fullAngle = degrees;
   const startAngle = (360 - degrees) / 2;
@@ -25,15 +25,17 @@ const Dial = ({
     const updateSize = () => {
       if (dialRef.current) {
         const rect = dialRef.current.getBoundingClientRect();
-        setSize(rect.width); // Use width to determine size for square aspect ratio
+        setSize(Math.min(rect.width, rect.height)); // Use the smaller dimension for a square aspect ratio
       }
     };
 
-    updateSize();
-    window.addEventListener('resize', updateSize);
+    const resizeObserver = new ResizeObserver(updateSize);
+    if (dialRef.current) {
+      resizeObserver.observe(dialRef.current);
+    }
 
     return () => {
-      window.removeEventListener('resize', updateSize);
+      resizeObserver.disconnect();
     };
   }, []);
 
@@ -124,7 +126,7 @@ const Dial = ({
       top: '50%',
       left: '50%',
       transform: 'translate(-50%, -50%)',
-      fontSize: '12px', // Adjust as needed
+      fontSize: `${size * textSizeRatio}px`, // Font size as a ratio of the component size
       color: 'black', // Adjust color as needed
       textAlign: 'center',
       userSelect: 'none',
@@ -137,9 +139,11 @@ const Dial = ({
       <div style={dialStyles.circle}></div>
       {renderTicks()}
       <div style={dialStyles.grip}></div>
-      <span style={dialStyles.label}>{id}</span> {/* Label added here */}
+      <span style={dialStyles.label}>{id}</span>
     </div>
   );
 };
+
+
 
 export default React.memo(Dial);

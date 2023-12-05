@@ -98,11 +98,9 @@ const EditListEntry = (({ singlePatchInfo, handleOpenModal, handlePatchDeleted, 
 
     return (
         <div>
-            <li 
-              className={`grid grid-cols-12 items-center mx-auto border-b border-true-gray gap-x-1`}
-              >
-                <div className="col-span-1"></div>
-                <div className="col-span-1 w-12 h-12 flex-shrink-0">
+            <li className="grid grid-cols-12 items-center mx-auto border-b border-true-gray gap-x-1 h-12">
+                {/* Image visible only on large screens and above */}
+                <div className="col-span-2 lg:col-span-1 hidden lg:block">
                     {!isImageLoaded && <ImagePlaceholder />}
                     {imageSrc && (
                         <img
@@ -113,40 +111,43 @@ const EditListEntry = (({ singlePatchInfo, handleOpenModal, handlePatchDeleted, 
                         />
                     )}
                 </div>
-                <span className="col-start-2 md:col-start-4 col-span-4 md:col-span-3 lg:col-span-2 xl:col-span-2 truncate">
+                {/* Adjust the column span for the name to prevent wrapping */}
+                <span className="col-span-5 lg:col-span-3 truncate">
                     {singlePatchInfo.name}
                 </span>
-                <span className="col-span-1 text-right opacity-0 lg:opacity-0 xl:opacity-100 overflow-hidden">
+                {/* Adjusted time span for medium and larger screens */}
+                <span className="col-span-2 lg:col-span-0 text-right truncate hidden md:hidden">
                     {timeSince(new Date(singlePatchInfo.uploadDate))}
                 </span>
-                <div className="flex justify-end items-center col-span-5">
+                {/* Button Group with adjusted column span */}
+                <div className="col-span-7 lg:col-span-7 flex justify-end space-x-2">
                     <button 
                         onClick={handleSetPatchNumber}
                         className="flex items-center px-2 py-1 bg-transparent border-0 rounded text-true-gray hover:text-green-600"
                     >
                         <FaPlay size="1.5em" />
-                        <span className="ml-1 hidden md:inline lg:inline xl:inline text-medium-gray">Load</span>
+                        <span className="ml-1 hidden lg:inline text-medium-gray">Load</span>
                     </button>
                     <button 
                         onClick={handleEditButtonClick}
                         className="flex items-center px-2 py-1 bg-transparent border-0 rounded text-true-gray hover:text-blue-500 ml-3"
                     >
                         <MdEdit size="1.5em" />
-                        <span className="ml-1 hidden md:inline lg:inline xl:inline text-medium-gray">Edit</span>
+                        <span className="ml-1 hidden lg:inline text-medium-gray">Edit</span>
                     </button>
                      <button 
                     onClick={handleLoadLayout}
                     className="flex items-center px-2 py-1 bg-transparent border-0 rounded text-true-gray hover:text-yellow-500 ml-3"
                     >
                     <MdViewModule size="1.5em" />
-                    <span className="ml-1 hidden md:inline lg:inline xl:inline text-medium-gray">Layout</span>
+                    <span className="ml-1 hidden lg:inline  text-medium-gray">Layout</span>
                 </button>
                     <button 
                         onClick={handleDeletePatch}
                         className="flex items-center px-2 py-1 bg-transparent border-0 rounded text-true-gray hover:text-red-500 ml-3"
                     >
                         <AiFillDelete size="1.5em" />
-                        <span className="ml-1 hidden md:inline lg:inline xl:inline text-medium-gray">Delete</span>
+                        <span className="ml-1 hidden lg:inline  text-medium-gray">Delete</span>
                     </button>
                 </div>
             </li>

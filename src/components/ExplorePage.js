@@ -15,7 +15,7 @@ useEffect(() => {
 }, [searchTerm, sortMethod, searchTag]);
 
   return (
-<div className="w-5/6 xs:w-5/6 sm:w-5/6 md:w-2/3 lg:w-2/3">
+<div className="w-11/12 lg:w-2/3">
   <div className="text-2xl mb-5 -mt-6"><br />Patch Library</div>
   <div className="flex justify-left items-center mb-4 space-x-4">
     <SearchBar setSearchTerm={setSearchTerm} />

@@ -1,46 +1,31 @@
-import React, { useCallback, useState } from 'react';
+import React, { useState, useCallback, useRef, useEffect } from 'react';
 import { useSelector } from 'react-redux';
 import { selectEditMode } from '../slices/modeSlice';
 
-const BUTTON_MODE = 'adapt';
-
-const styles = {
-  container: {
-    display: 'flex',
-    justifyContent: 'center',
-    alignItems: 'center',
-    width: BUTTON_MODE === 'fixed' ? '80px' : '100%',
-    height: BUTTON_MODE === 'fixed' ? '80px' : '100%',
-    border: '4px solid #262626',
-    borderRadius: '50%',
-    backgroundClip: 'padding-box',
-    boxSizing: 'border-box',
-  },
-  button: (isClicked) => ({
-    width: BUTTON_MODE === 'fixed' ? '72px' : 'calc(100% - 2px)',  // Adjusted size for fixed mode
-    height: BUTTON_MODE === 'fixed' ? '72px' : 'calc(100% - 2px)',  // Adjusted size for fixed mode
-    border: '4px solid #6b6a6a',
-    borderRadius: '50%',
-    backgroundColor: isClicked ? '#6b6a6a' : 'white',
-    cursor: 'pointer',
-    boxSizing: 'border-box',
-    position: 'relative', // Added to position label
-  }),
-  label: {
-    position: 'absolute',
-    top: '50%',
-    left: '50%',
-    transform: 'translate(-50%, -50%)',
-    fontSize: '12px', // Smaller font size to fit the button
-    color: 'black', // Color of the label text
-    textAlign: 'center',
-    userSelect: 'none', // Prevents text selection
-  }
-};
-
-const Button = ({ id, paramId, handleButtonClick }) => {
+const Button = ({ id, paramId, handleButtonClick, textSizeRatio = 0.2 }) => {
   const [isClicked, setIsClicked] = useState(false);
   const editMode = useSelector(selectEditMode);
+
+  const containerRef = useRef(null);
+  const [size, setSize] = useState(0);
+
+  useEffect(() => {
+    const updateSize = () => {
+      if (containerRef.current) {
+        const rect = containerRef.current.getBoundingClientRect();
+        setSize(Math.min(rect.width, rect.height)); // Maintain square aspect ratio
+      }
+    };
+
+    const resizeObserver = new ResizeObserver(updateSize);
+    if (containerRef.current) {
+      resizeObserver.observe(containerRef.current);
+    }
+
+    return () => {
+      resizeObserver.disconnect();
+    };
+  }, []);
 
   const handleClick = useCallback(() => {
     if (!editMode) {
@@ -50,10 +35,46 @@ const Button = ({ id, paramId, handleButtonClick }) => {
     }
   }, [editMode, paramId, handleButtonClick]);
 
+  const borderSize = Math.max(1, size * 0.05);
+
+  const buttonStyle = {
+    width: `${size - 2 * borderSize}px`,
+    height: `${size - 2 * borderSize}px`,
+    border: `${borderSize}px solid #6b6a6a`,
+    boxShadow: `0 0 0 ${borderSize}px #262626`,
+    borderRadius: '50%',
+    backgroundColor: isClicked ? '#6b6a6a' : 'white',
+    cursor: 'pointer',
+    boxSizing: 'border-box',
+    position: 'relative',
+  };
+
+  const containerStyle = {
+    display: 'flex',
+    justifyContent: 'center',
+    alignItems: 'center',
+    width: '100%',
+    height: '100%',
+    borderRadius: '50%',
+    backgroundClip: 'padding-box',
+    boxSizing: 'border-box',
+  };
+
+  const labelStyle = {
+    position: 'absolute',
+    top: '50%',
+    left: '50%',
+    transform: 'translate(-50%, -50%)',
+    fontSize: `${size * textSizeRatio}px`, // Font size as a ratio of the component size
+    color: 'black',
+    textAlign: 'center',
+    userSelect: 'none',
+  };
+
   return (
-    <div style={styles.container} onClick={handleClick}>
-      <div style={styles.button(isClicked)}>
-        <span style={styles.label}>{id}</span>
+    <div ref={containerRef} style={containerStyle} onClick={handleClick}>
+      <div style={buttonStyle}>
+        <span style={labelStyle}>{id}</span>
       </div>
     </div>
   );

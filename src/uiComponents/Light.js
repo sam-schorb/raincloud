@@ -1,6 +1,4 @@
-// Light.jsx
-
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useRef } from 'react';
 import { useSelector } from 'react-redux';
 import { selectOutportMessages } from '../slices/outportMessagesSlice';
 
@@ -8,40 +6,32 @@ const getBackgroundColor = (message) => {
   if (message === null || message === undefined) return 'white';
   if (message === 1) return 'yellow';
   if (message >= 2) return 'blue';
-  return 'white';  // default
+  return 'white';
 };
 
-const styles = {
-    container: {
-      display: 'flex',
-      justifyContent: 'center',
-      alignItems: 'center',
-      width: '100%',
-      height: '100%',
-      boxSizing: 'border-box',
-    },
-    light: (message) => ({
-      width: '100%',
-      height: '100%',
-      border: '4px solid #6b6a6a',
-      borderRadius: '50%',
-      backgroundColor: getBackgroundColor(message),
-    }),
-    label: {
-      position: 'absolute',
-      top: '50%',
-      left: '50%',
-      transform: 'translate(-50%, -50%)',
-      fontSize: '12px', // Smaller font size to fit the button
-      color: 'black', // Color of the label text
-      textAlign: 'center',
-      userSelect: 'none', // Prevents text selection
-    }
-  };
-
-const Light = ({ id, paramId }) => {
+const Light = ({ id, paramId, textSizeRatio = 0.2 }) => {
   const messages = useSelector(selectOutportMessages);
   const [displayMessage, setDisplayMessage] = useState(null);
+  const containerRef = useRef(null);
+  const [size, setSize] = useState(0);
+
+  useEffect(() => {
+    const updateSize = () => {
+      if (containerRef.current) {
+        const rect = containerRef.current.getBoundingClientRect();
+        setSize(Math.min(rect.width, rect.height));
+      }
+    };
+
+    const resizeObserver = new ResizeObserver(updateSize);
+    if (containerRef.current) {
+      resizeObserver.observe(containerRef.current);
+    }
+
+    return () => {
+      resizeObserver.disconnect();
+    };
+  }, []);
 
   useEffect(() => {
     const messageContent = messages[id];
@@ -50,13 +40,42 @@ const Light = ({ id, paramId }) => {
     }
   }, [messages, id, displayMessage]);
 
+  const borderSize = Math.max(1, size * 0.05);
+
+  const lightStyle = {
+    width: `${size}px`,
+    height: `${size}px`,
+    border: `${borderSize}px solid #6b6a6a`,
+    borderRadius: '50%',
+    backgroundColor: getBackgroundColor(displayMessage),
+    boxSizing: 'border-box',
+    position: 'relative',
+  };
+
+  const labelStyle = {
+    position: 'absolute',
+    top: '50%',
+    left: '50%',
+    transform: 'translate(-50%, -50%)',
+    fontSize: `${size * textSizeRatio}px`, // Font size as a ratio of the component size
+    color: 'black',
+    textAlign: 'center',
+    userSelect: 'none',
+  };
+
   return (
-    <div style={styles.container}>
-      <div style={styles.light(displayMessage)} />
-      <span style={styles.label}>{id}</span>
+    <div ref={containerRef} style={{
+      display: 'flex',
+      justifyContent: 'center',
+      alignItems: 'center',
+      width: '100%',
+      height: '100%',
+      boxSizing: 'border-box',
+    }}>
+      <div style={lightStyle} />
+      <span style={labelStyle}>{id}</span>
     </div>
   );
 };
-
 
 export default React.memo(Light);

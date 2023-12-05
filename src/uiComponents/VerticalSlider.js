@@ -1,59 +1,37 @@
-// VerticalSlider.js
 import React, { useState, useCallback, useEffect, useRef } from 'react';
 import { useSelector } from 'react-redux';
 import { selectEditMode } from '../slices/modeSlice';
 
-const SLIDER_MODE = 'adapt';  // Set to 'adapt' for adaptive size, 'fixed' for fixed size
-
-const styles = {
-  container: {
-    position: 'relative',
-    width: SLIDER_MODE === 'fixed' ? '80px' : '100%',
-    height: SLIDER_MODE === 'fixed' ? '240px' : '100%',
-    border: '4px solid #262626',
-    borderRadius: '8px',
-    backgroundClip: 'padding-box',
-    boxSizing: 'border-box',
-  },
-  sliderTrack: {
-    position: 'absolute',
-    width: '100%',
-    height: '100%',
-    background: '#eee',
-    borderRadius: '8px',
-  },
-  sliderThumb: (percentage) => ({
-    position: 'absolute',
-    width: '100%',
-    height: '6.67%',
-    top: `calc(${percentage}% - 10px)`,
-    background: '#6b6a6a',
-    borderRadius: '8px',
-    cursor: 'pointer',
-  }),
-  label: {
-    position: 'absolute',
-    top: '50%',
-    left: '50%',
-    transform: 'translate(-50%, -50%)', // Centering the label inside the container
-    fontSize: '12px',
-    color: 'black',
-    textAlign: 'center',
-    userSelect: 'none',
-    zIndex: 1 // Ensuring label is on top
-  }
-};
-
-const VerticalSlider = ({ id, value, onValueChange }) => {  // Add value and onValueChange props
+const VerticalSlider = ({ id, value, onValueChange, textSizeRatio = 0.2 }) => {
   const [isDragging, setIsDragging] = useState(false);
-  const [sliderValue, setSliderValue] = useState(value);  // Initialize sliderValue with value prop
+  const [sliderValue, setSliderValue] = useState(value || 0);
   const editMode = useSelector(selectEditMode);
 
   const sliderRef = useRef(null);
+  const containerRef = useRef(null);
+  const [size, setSize] = useState(0);
 
   useEffect(() => {
-    setSliderValue(value);  // Update the sliderValue state whenever the value prop changes
+    setSliderValue(value);
   }, [value]);
+
+  useEffect(() => {
+    const updateSize = () => {
+      if (containerRef.current) {
+        const rect = containerRef.current.getBoundingClientRect();
+        setSize(rect.width);
+      }
+    };
+  
+    const resizeObserver = new ResizeObserver(updateSize);
+    if (containerRef.current) {
+      resizeObserver.observe(containerRef.current);
+    }
+  
+    return () => {
+      resizeObserver.disconnect();
+    };
+  }, []);
 
   const handleMouseDown = useCallback((event) => {
     sliderRef.current = event.currentTarget;
@@ -65,17 +43,17 @@ const VerticalSlider = ({ id, value, onValueChange }) => {  // Add value and onV
     if (!editMode && isDragging && sliderRef.current) {
       const rect = sliderRef.current.getBoundingClientRect();
       const y = event.clientY - rect.top;
-      const percentage = 100 - ((y / rect.height) * 100);  
-      const newValue = Math.min(Math.max(percentage, 0), 100) / 100;
+      const percentage = 100 - ((y / rect.height) * 100);
+      const newValue = Math.min(Math.max(0, percentage), 100) / 100;
       setSliderValue(newValue);
-      onValueChange && onValueChange(newValue);  // Send the value between 0 and 1 to parent immediately
+      onValueChange && onValueChange(newValue);
     }
   }, [editMode, isDragging, onValueChange]);
 
-const handleMouseUp = useCallback(() => {
+  const handleMouseUp = useCallback(() => {
     setIsDragging(false);
-    onValueChange && onValueChange(sliderValue);  // Send the value between 0 and 1 to parent
-}, [ sliderValue, onValueChange]);
+    onValueChange && onValueChange(sliderValue);
+  }, [sliderValue, onValueChange]);
 
   useEffect(() => {
     document.addEventListener('mousemove', handleMouseMove);
@@ -87,19 +65,59 @@ const handleMouseUp = useCallback(() => {
     };
   }, [handleMouseMove, handleMouseUp]);
 
+  const fontSize = size * textSizeRatio;
+  const borderSize = Math.max(1, size * 0.05);
+  const sliderHeight = 80 + (size / 3);
+
   return (
-    <div style={styles.container} onMouseDown={handleMouseDown}>
-        <span style={styles.label}>{id}</span>
-        <div style={styles.sliderTrack}>
-            <div style={styles.sliderThumb(100 - sliderValue * 100)} />
-        </div>
+    <div ref={containerRef} style={{
+      display: 'flex', // Use flexbox for layout
+      justifyContent: 'center', // Center horizontally
+      alignItems: 'center', // Center vertically
+      position: 'relative',
+      height: `${sliderHeight}%`, // Dynamic height based on width
+      width: '75%', // Set width to 85% of the container
+      border: `${borderSize}px solid #262626`,
+      margin: 'auto', // Added to ensure centering within the gridstack cell
+      borderRadius: '8px',
+      backgroundClip: 'padding-box',
+      boxSizing: 'border-box',
+    }} onMouseDown={handleMouseDown}>
+      <div style={{
+        position: 'absolute',
+        width: '100%',
+        height: '100%',
+        background: '#eee',
+        borderRadius: '8px',
+      }}>
+        <span style={{
+            position: 'absolute',
+            display: 'flex', // Use flexbox for layout
+            justifyContent: 'center', // Center horizontally
+            alignItems: 'center', // Center vertically
+          top: '50%',
+          left: '50%',
+          transform: 'translate(-50%, -50%)',
+          fontSize: fontSize,
+          color: 'black',
+          textAlign: 'center',
+          userSelect: 'none',
+          zIndex: 1
+        }}>
+          {id}
+        </span>
+        <div style={{
+          position: 'absolute',
+          width: '100%',
+          height: '6.67%',
+          top: `calc(${100 - sliderValue * 100}% - 10px)`, // Adjusted thumb position
+          background: '#6b6a6a',
+          borderRadius: '8px',
+          cursor: 'pointer',
+        }} />
+      </div>
     </div>
   );
-};
-
-VerticalSlider.defaultProps = {
-  value: 0,
-  onValueChange: () => {},
 };
 
 export default React.memo(VerticalSlider);

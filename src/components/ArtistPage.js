@@ -40,7 +40,7 @@ const ArtistPage = () => {
             </div>
             < br/>
             {/* List of patches by the artist */}
-            <div className="mt-4 md:w-2/3 mx-auto">
+            <div className="mt-4 w-11/12 lg:w-2/3 mx-auto">
                 {artistPatches.length > 0 ? (
                     artistPatches.map(patch => (
                         <ListEntry

@@ -19,30 +19,29 @@ const [isHovered, setIsHovered] = useState(false);
 const [localHasLiked, setLocalHasLiked] = useState(hasLiked);
 const [localLikeCount, setLocalLikeCount] = useState(likeCount);
 const [notificationType, setNotificationType] = useState(null);
+
 const [imageSrc, setImageSrc] = useState(null); // State to hold the image source
-const [isImageLoaded, setIsImageLoaded] = useState(false); // New state to track image loading
+const [isImageLoaded, setIsImageLoaded] = useState(false); // State to track image loading
 
-  useEffect(() => {
-    // Function to fetch the image data
-    const fetchImageData = async (patchId) => {
-      try {
-        const response = await fetch(`/patchImage/${patchId}`);
-        if (!response.ok) throw new Error(response.statusText);
-        const imageData = await response.json();
-        setImageSrc(`data:image/png;base64,${imageData}`);
-      } catch (error) {
-        console.error('Error fetching image:', error);
-      }
-    };
-
-    if (singlePatchInfo._id && !imageSrc) {
-      fetchImageData(singlePatchInfo._id);
+useEffect(() => {
+  // Function to fetch the image data
+  const fetchImageData = async () => {
+    try {
+      const response = await fetch(`/patchImage/${singlePatchInfo._id}`);
+      if (!response.ok) throw new Error(response.statusText);
+      const imageData = await response.json();
+      setImageSrc(`data:image/png;base64,${imageData}`);
+    } catch (error) {
+      console.error('Error fetching image:', error);
     }
-  }, [singlePatchInfo._id, imageSrc]);
-
-  const onImageLoad = () => {
-    setIsImageLoaded(true);
   };
+
+  fetchImageData();
+}, [singlePatchInfo._id]);
+
+const onImageLoad = () => {
+  setIsImageLoaded(true);
+};
 
   useEffect(() => {
     setLocalHasLiked(hasLiked);
@@ -111,28 +110,29 @@ const [isImageLoaded, setIsImageLoaded] = useState(false); // New state to track
                 className={`grid grid-cols-12 items-center mx-auto py-1 border-b border-gray-400 gap-x-1 cursor-pointer ${isHovered ? 'bg-medium-gray' : ''}`}
             >
                 {/* Placeholder div */}
-                <div className="md:col-span-1 hidden md:block"></div>
+                <div className="lg:col-span-1 hidden lg:inline-block"></div>
                 {/* Image */}
                 {singlePatchInfo.image && !isLoading && (
                 <div className="col-span-1 w-12 h-12 flex-shrink-0">
-                    {!isImageLoaded && <ImagePlaceholder />}
-                    {imageSrc && (
-                        <img
-                            src={imageSrc}
-                            alt="Patch"
-                            className={`w-12 h-12 object-cover ${isImageLoaded ? 'block' : 'hidden'}`}
-                            onLoad={onImageLoad}
-                        />
-                    )}
-                </div>
+                {!isImageLoaded && <ImagePlaceholder />}
+                {imageSrc && (
+                <img
+                src={imageSrc}
+                alt={`Patch: ${singlePatchInfo.name}`} // More descriptive alt text
+                className="w-12 h-12 object-cover"
+                onLoad={onImageLoad}
+                style={{ display: isImageLoaded ? 'block' : 'none' }} // Directly using inline style for visibility
+              />
+                )}
+              </div>
                 )}
                 {/* Patch name */}
-                <span className="col-span-4 md:col-span-3 lg:col-span-3 truncate">
+                <span className="col-span-5 lg:col-span-3 col-start-3 lg:col-span-2 truncate">
                     {!isLoading ? singlePatchInfo.name : 'Loading...'}
                 </span>
                 {/* Username */}
                 <span 
-                    className="col-span-3 md:col-span-3 lg:col-span-3 text-center truncate hover:underline"
+                    className="col-span-4 lg:col-start-6 col-start-8 text-center truncate hover:underline"
                     onClick={handleUsernameClick}
                 >
                     {!isLoading && (
@@ -147,7 +147,7 @@ const [isImageLoaded, setIsImageLoaded] = useState(false); // New state to track
                     )}
                 </span>
                 {/* Upload time */}
-                <span className="col-span-2 text-right opacity-0 sm:opacity-100">
+                <span className="col-span-2 text-right hidden lg:inline-block">
                     {!isLoading ? timeSince(new Date(singlePatchInfo.uploadDate)) : 'Loading...'}
                 </span>
                 {/* Like button */}

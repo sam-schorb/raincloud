@@ -5,6 +5,7 @@ import 'gridstack/dist/gridstack.min.css';
 import '../utils/gridColumns.scss';
 import 'tailwindcss/tailwind.css';
 import EditPatchTitle from './EditPatchTitle';
+import EditPatchTitleButtons from './EditPatchTitleButtons';
 import Button from '../uiComponents/Button';
 import Dial from '../uiComponents/Dial';
 import Switch from '../uiComponents/Switch';
@@ -43,56 +44,149 @@ const EditLayout = ( { setNotificationType } ) => {
   const gridRef = useRef(null);
   const gridStackInstance = useRef(null);
   const rootsMap = useRef(new Map()).current;
+  const updateQueue = useRef([]);
+
+  const [gridWidth, setGridWidth] = useState(0); // State to store grid width
+  const lastWidth = useRef(0); // Ref to store the last width
+  const [responsiveNumColumns, setResponsiveNumColumns] = useState(numColumns);
+
+
+    // useEffect to handle responsiveness based on gridWidth
+    useEffect(() => {
+      let updatedNumColumns = numColumns; // Start with current numColumns
+  
+      if (gridWidth < 375) {
+        updatedNumColumns -= 8;
+      } else if (gridWidth < 640) {
+        updatedNumColumns -= 6;
+      } else if (gridWidth < 800) {
+        updatedNumColumns -= 4;
+      } else if (gridWidth < 1024) {
+        updatedNumColumns -= 2;
+      }
+  
+      // Ensure numColumns doesn't go below a certain threshold
+      updatedNumColumns = Math.max(updatedNumColumns, 2);
+  
+      setResponsiveNumColumns(updatedNumColumns); // Update responsive numColumns
+
+    }, [gridWidth, numColumns]);
+
+    // useEffect to log gridWidth changes
+useEffect(() => {
+  console.log("responsiveNumColumns:",responsiveNumColumns);
+}, [responsiveNumColumns]);
+
+  // Function to calculate margin based on window width
+  const calculateMargin = (width) => {
+    if (width < 375) {
+      return 2; // Smaller margin for very small widths
+    } else if (width < 640) {
+      return 2; // Slightly larger margin
+    } else if (width < 800) {
+      return 4; // And so on...
+    } else if (width < 1024) {
+      return 6;
+    }
+    return 10; // Default margin for larger widths
+  };
+
+  // Function to apply changes to grid stack including margins
+  const applyGridStackChanges = () => {
+    const latestUpdate = updateQueue.current.pop(); 
+    updateQueue.current = [];
+
+    if (latestUpdate && gridStackInstance.current) {
+      // Update cell height and columns
+      gridStackInstance.current.cellHeight(latestUpdate.cellHeight);
+      gridStackInstance.current.column(latestUpdate.effectiveNumColumns);
+
+      // Update margin
+      const newMargin = calculateMargin(gridWidth);
+      gridStackInstance.current.margin(newMargin);
+    }
+  };
+
+
+// Function to update gridWidth
+const updateGridWidth = () => {
+  if (gridRef.current) {
+    const currentWidth = gridRef.current.offsetWidth;
+    if (currentWidth !== lastWidth.current) {
+      setGridWidth(currentWidth); // Update state
+      lastWidth.current = currentWidth;
+    }
+  }
+};
+
+// useEffect to log gridWidth changes
+useEffect(() => {
+  console.log("Grid width changed:", gridWidth);
+}, [gridWidth]);
+
+// Add window resize listener to update gridWidth
+useEffect(() => {
+  window.addEventListener("resize", updateGridWidth);
+
+  // Initial update
+  updateGridWidth();
+
+  // Cleanup
+  return () => {
+    window.removeEventListener("resize", updateGridWidth);
+  };
+}, []); // Empty dependency array ensures this runs once on mount
+
 
   const resizeGrid = useCallback(() => {
     if (!gridInitialized || !gridRef.current) {
       return; // Do not proceed if the grid is not initialized or if the grid ref is not attached
     }
   
-    // Calculate the width of the cells based on the new number of columns and the grid's width
-    const gridWidth = gridRef.current.offsetWidth;
-    const cellWidth = Math.round(gridWidth / numColumns);
-  
-    // Determine the height of the cells, which should match the width
+    const effectiveNumColumns = responsiveNumColumns; // Use responsiveNumColumns instead of numColumns
+    const cellWidth = Math.round(gridRef.current.offsetWidth / effectiveNumColumns);
     const cellHeight = cellWidth;
   
-    // Adjust the grid stack instance's cell height, adding extra space for the label if needed
-    gridStackInstance.current.cellHeight(cellHeight);
-  
-    // Update the number of columns in the grid stack instance
-    gridStackInstance.current.column(numColumns);
-  }, [showLabel, numColumns, gridInitialized]);
+    updateQueue.current.push({ cellHeight, effectiveNumColumns });
+    setTimeout(applyGridStackChanges, 300);
+  }, [gridInitialized, responsiveNumColumns, gridWidth]); // Include gridWidth in dependencies
+
   
   
 // Only run the initialization when the user has interacted
 useEffect(() => {
-  let isCancelled = false;
+  let isCancelled = false; // Flag to indicate if the effect cleanup has run
 
-  if (isUserInteracted || triggerInit) { // Use triggerInit to control useEffect execution
+  if (isUserInteracted) {
+    // Define a delayed initialization function
     const init = async () => {
       await initializeGrid();
       fetchUIAssociations();
     };
 
+    // Set a timeout to delay the initialization
     const timeoutId = setTimeout(() => {
       if (!isCancelled) {
         init();
       }
-    }, 500);
+    }, 500); // Adjust the delay as needed
 
     return () => {
-      isCancelled = true;
-      clearTimeout(timeoutId);
-      if (isUserInteracted || triggerInit) {
+      isCancelled = true; // Set the flag to true to indicate cleanup
+      clearTimeout(timeoutId); // Clear the timeout to prevent the init function from being called
+
+      if (isUserInteracted) {
         window.removeEventListener('resize', resizeGrid);
         setGridInitialized(false);
+        // Unsubscribe and destroy handlers as needed
         if (currentDevice?.messageEvent) {
           currentDevice.messageEvent.unsubscribe(subscribeToOutportMessages);
         }
+        // destroyAllEventHandlers(); // If defined
       }
     };
   }
-}, [isUserInteracted, triggerInit, patchNumber]); // Now useEffect depends on triggerInit as well
+}, [isUserInteracted, patchNumber, numColumns, dropdownNumColumns, responsiveNumColumns]); // Removed resizeGrid from the dependencies
 
 
 useEffect(() => {
@@ -244,19 +338,22 @@ useEffect(() => {
         console.log('loadInitialLayout: JSON data parsed from response:', layoutData);
   
         if (layoutData && typeof layoutData.numColumns !== 'undefined' && typeof layoutData.showLabels !== 'undefined') {
-          console.log('loadInitialLayout: layoutData contains numColumns and showLabels, updating Redux store.');
           // Store the server value in a variable
           const serverNumColumns = layoutData.numColumns || 16; // default to 16 if null or undefined
           const showLabel = layoutData.showLabels !== null ? layoutData.showLabels : true; // default to true if null
-  
-          // Decide which value to use for numColumns based on dropdownNumColumns
-          const numColumnsToUse = dropdownNumColumns || serverNumColumns;
-  
+    
+          // Decide which value to use for numColumns
+          // Use dropdownNumColumns if non-null, otherwise use serverNumColumns
+          let numColumnsToUse;
+          if (dropdownNumColumns !== null && dropdownNumColumns !== undefined) {
+            numColumnsToUse = dropdownNumColumns;
+          } else {
+            numColumnsToUse = serverNumColumns;
+          }
+    
           // Dispatch the decided value to the Redux store
           dispatch(setNumColumns(numColumnsToUse));
           dispatch(setShowLabel(showLabel));
-        } else {
-          console.log('loadInitialLayout: layoutData is missing numColumns or showLabels properties.');
         }
   
         if (!layoutData.layout || !Array.isArray(layoutData.layout) || layoutData.layout.length === 0) {
@@ -672,7 +769,7 @@ const getComponentTypeFromWidgetId = (widgetId) => {
   }
 
   return (
-    <div key={numColumns} style={{ width: '100%' }}>
+    <div key={numColumns} style={{ width: '100%' }} className={`pb-64`}>
         <EditPatchTitle 
             onSave={saveGrid} 
             onCancel={handleCancel} 
@@ -692,6 +789,12 @@ const getComponentTypeFromWidgetId = (widgetId) => {
                 }
             `}
             </style>
+        </div>
+        <div key={numColumns} style={{ width: '100%' }} className="fixed inset-x-0 bottom-0">
+          <EditPatchTitleButtons 
+              onSave={saveGrid} 
+              onCancel={handleCancel} 
+          />
         </div>
     </div>
   );

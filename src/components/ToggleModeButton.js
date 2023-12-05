@@ -7,18 +7,18 @@ const ToggleModeButton = () => {
   const dispatch = useDispatch();
   const editMode = useSelector(selectEditMode);
 
-  // Use the useEffect hook to watch for changes in editMode
   useEffect(() => {
-    // Log the new mode to the console whenever editMode changes
     console.log(editMode ? 'Edit Mode' : 'Interact Mode');
-  }, [editMode]);  // List editMode as a dependency, so the effect runs whenever editMode changes
+  }, [editMode]);
 
   return (
     <button className="py-2 px-4 m-4 border-2 border-medium-gray bg-true-gray hover:bg-light-gray text-dark-gray rounded" 
             onClick={() => dispatch(toggleEditMode())}>
-      {editMode ? 'Switch to Interact mode' : 'Switch to Edit Mode'}
+      <span className="sm:hidden">{editMode ? 'Edit' : 'Interact'}</span>
+      <span className="hidden sm:inline">{editMode ? 'Switch to Interact mode' : 'Switch to Edit Mode'}</span>
     </button>
   );
 };
 
 export default ToggleModeButton;
+

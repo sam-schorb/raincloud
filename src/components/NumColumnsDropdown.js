@@ -1,34 +1,32 @@
-// NumColumnsDropdown.js
 import React, { useEffect, useState } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import { selectNumColumns, setDropdownNumColumns, selectDropdownNumColumns } from '../slices/layoutSlice';
 
 const NumColumnsDropdown = () => {
   const dispatch = useDispatch();
-  const numColumns = useSelector(selectNumColumns); // The value from the server
-  const dropdownValue = useSelector(selectDropdownNumColumns); // The value from the dropdown
+  const numColumns = useSelector(selectNumColumns);
+  const dropdownValue = useSelector(selectDropdownNumColumns);
   const [localDropdownValue, setLocalDropdownValue] = useState(dropdownValue || numColumns);
 
   useEffect(() => {
-    // Only update the local state to match Redux state on initial mount
     setLocalDropdownValue(dropdownValue || numColumns);
   }, [numColumns, dropdownValue]);
 
   const handleChange = (e) => {
     const newValue = Number(e.target.value);
-    setLocalDropdownValue(newValue); // Update local state
-    dispatch(setDropdownNumColumns(newValue)); // Update Redux state
+    setLocalDropdownValue(newValue);
+    dispatch(setDropdownNumColumns(newValue));
   };
 
   return (
     <div className="flex items-center">
-      <label htmlFor="numColumns" className="mr-2">Number of Columns: </label>
+      <label htmlFor="numColumns" className="mr-2 text-lg hidden sm:inline text-white">Columns:</label>
       <div className="relative">
         <select
           id="numColumns"
           onChange={handleChange}
-          value={localDropdownValue} // Use local state for the select value
-          className="py-2 px-4 m-4 overflow-y-scroll border-2 border-medium-gray bg-true-gray hover:bg-light-gray text-dark-gray rounded"
+          value={localDropdownValue}
+          className="py-2 px-2 m-2 overflow-y-scroll border-2 border-medium-gray bg-true-gray hover:bg-light-gray text-dark-gray rounded"
           size="1"
         >
           {[...Array(30).keys()].map((number) => (
