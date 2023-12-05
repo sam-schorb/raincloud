@@ -364,7 +364,7 @@ const initializeGrid = useCallback(() => {
     if (UIAssociations.length > 0) {
       loadInitialLayout();
     }
-  }, [UIAssociations, loadInitialLayout]);
+  }, [UIAssociations]);
   
   
   const loadWidgetsToGrid = widgetsToLoad => {

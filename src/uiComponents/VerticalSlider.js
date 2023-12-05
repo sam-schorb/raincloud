@@ -1,12 +1,7 @@
-/* eslint-disable react-hooks/exhaustive-deps */
 import React, { useState, useCallback, useEffect, useRef } from 'react';
-import { useSelector } from 'react-redux';
-import { selectEditMode } from '../slices/modeSlice';
 
 const VerticalSlider = ({ id, value, onValueChange, textSizeRatio = 0.2 }) => {
-  const [isDragging, setIsDragging] = useState(false);
   const [sliderValue, setSliderValue] = useState(value || 0);
-  const editMode = useSelector(selectEditMode);
 
   const sliderRef = useRef(null);
   const containerRef = useRef(null);
@@ -23,74 +18,57 @@ const VerticalSlider = ({ id, value, onValueChange, textSizeRatio = 0.2 }) => {
         setSize(rect.width);
       }
     };
-  
+
     const resizeObserver = new ResizeObserver(updateSize);
     if (containerRef.current) {
       resizeObserver.observe(containerRef.current);
     }
-  
+
     return () => {
       resizeObserver.disconnect();
     };
   }, []);
 
-  const handleStartInteraction = (clientY) => {
-    if (!editMode && sliderRef.current) {
-      const rect = sliderRef.current.getBoundingClientRect();
-      const y = clientY - rect.top;
-      const percentage = 100 - ((y / rect.height) * 100);
+  const convertRange = useCallback((oldMin, oldMax, newMin, newMax, oldValue) => {
+    return ((oldValue - oldMin) * (newMax - newMin)) / (oldMax - oldMin) + newMin;
+  }, []);
+
+  const startDrag = (e) => {
+    e.preventDefault();
+    let startY;
+    if (e.type === 'mousedown') {
+      startY = e.clientY;
+    } else if (e.type === 'touchstart') {
+      startY = e.touches[0].clientY;
+    }
+
+    const moveHandler = (moveEvent) => {
+      let currentY;
+      if (moveEvent.type === 'mousemove') {
+        currentY = moveEvent.clientY;
+      } else if (moveEvent.type === 'touchmove') {
+        currentY = moveEvent.touches[0].clientY;
+      }
+
+      const deltaY = startY - currentY;
+      const slider = sliderRef.current.getBoundingClientRect();
+      const percentage = convertRange(0, slider.height, 0, 100, deltaY);
       const newValue = Math.min(Math.max(0, percentage), 100) / 100;
+
       setSliderValue(newValue);
       onValueChange && onValueChange(newValue);
-    }
-  };
-
-  const handleMouseDown = useCallback((event) => {
-    setIsDragging(true);
-    handleStartInteraction(event.clientY);
-    event.preventDefault();
-  }, [handleStartInteraction]);
-
-  const handleMouseMove = useCallback((event) => {
-    if (isDragging) {
-      handleStartInteraction(event.clientY);
-    }
-  }, [isDragging, handleStartInteraction]);
-
-  const handleMouseUp = useCallback(() => {
-    setIsDragging(false);
-  }, []);
-
-  const handleTouchStart = useCallback((event) => {
-    setIsDragging(true);
-    handleStartInteraction(event.touches[0].clientY);
-    event.preventDefault(); // Prevent default touch behavior
-  }, [handleStartInteraction]);
-
-  const handleTouchMove = useCallback((event) => {
-    if (isDragging) {
-      handleStartInteraction(event.touches[0].clientY);
-      event.preventDefault(); // Prevent default touch behavior
-    }
-  }, [isDragging, handleStartInteraction]);
-
-  const handleTouchEnd = useCallback(() => {
-    setIsDragging(false);
-  }, []);
-
-  useEffect(() => {
-    document.addEventListener('mousemove', handleMouseMove);
-    document.addEventListener('mouseup', handleMouseUp);
-    document.addEventListener('touchmove', handleTouchMove, { passive: false });
-    document.addEventListener('touchend', handleTouchEnd);
-
-    return () => {
-      document.removeEventListener('mousemove', handleMouseMove);
-      document.removeEventListener('mouseup', handleMouseUp);
-      document.removeEventListener('touchmove', handleTouchMove);
-      document.removeEventListener('touchend', handleTouchEnd);
     };
-  }, [handleMouseMove, handleMouseUp, handleTouchMove, handleTouchEnd]);
+
+    const endDrag = () => {
+      document.removeEventListener('mousemove', moveHandler);
+      document.removeEventListener('touchmove', moveHandler);
+    };
+
+    document.addEventListener('mousemove', moveHandler);
+    document.addEventListener('mouseup', endDrag);
+    document.addEventListener('touchmove', moveHandler, { passive: false });
+    document.addEventListener('touchend', endDrag);
+  };
 
   const fontSize = size * textSizeRatio;
   const borderSize = Math.max(1, size * 0.05);
@@ -109,8 +87,8 @@ const VerticalSlider = ({ id, value, onValueChange, textSizeRatio = 0.2 }) => {
       borderRadius: '8px',
       backgroundClip: 'padding-box',
       boxSizing: 'border-box',
-    }} onMouseDown={handleMouseDown} onTouchStart={handleTouchStart}>
-      <div style={{
+    }} onMouseDown={startDrag} onTouchStart={startDrag}>
+      <div ref={sliderRef} style={{
         position: 'absolute',
         width: '100%',
         height: '100%',
@@ -134,14 +112,14 @@ const VerticalSlider = ({ id, value, onValueChange, textSizeRatio = 0.2 }) => {
           {id}
         </span>
         <div style={{
-          position: 'absolute',
-          width: '100%',
-          height: '6.67%',
-          top: `calc(${100 - sliderValue * 100}% - 10px)`,
-          background: '#6b6a6a',
-          borderRadius: '8px',
-          cursor: 'pointer',
-        }} />
+        position: 'absolute',
+        width: '100%',
+        height: '6.67%',
+        top: `calc(${100 - sliderValue * 98}% - 5px)`,
+        background: '#6b6a6a',
+        borderRadius: '8px',
+        cursor: 'pointer',
+      }} />
       </div>
     </div>
   );

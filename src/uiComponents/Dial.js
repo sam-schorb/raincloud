@@ -45,24 +45,45 @@ const Dial = ({
 
   const startDrag = (e) => {
     e.preventDefault();
-    const dial = dialRef.current.getBoundingClientRect();
-    const startY = e.clientY;
-
+    let startY;
+    if (e.type === 'mousedown') {
+      startY = e.clientY;
+    } else if (e.type === 'touchstart') {
+      startY = e.touches[0].clientY;
+    }
+  
     const moveHandler = (moveEvent) => {
-      const deltaY = startY - moveEvent.clientY;
+      let currentY;
+      if (moveEvent.type === 'mousemove') {
+        currentY = moveEvent.clientY;
+      } else if (moveEvent.type === 'touchmove') {
+        currentY = moveEvent.touches[0].clientY;
+      }
+  
+      // Apply scaling factor for touch events
+      const touchSensitivityScale = moveEvent.type.startsWith('touch') ? 0.5 : 1;
+      const deltaY = (startY - currentY) * touchSensitivityScale;
+  
+      const dial = dialRef.current.getBoundingClientRect();
       const deltaDeg = convertRange(0, dial.height, 0, fullAngle, deltaY);
       let newDeg = Math.min(Math.max(startAngle, deg + deltaDeg), endAngle);
       const newValue = convertRange(startAngle, endAngle, min, max, newDeg);
-
+  
       setDeg(newDeg);
-      setCurrentValue(newValue); // Update currentValue with the new value
+      setCurrentValue(newValue);
       onChange(newValue);
+    };
+  
+
+    const endDrag = () => {
+      document.removeEventListener('mousemove', moveHandler);
+      document.removeEventListener('touchmove', moveHandler);
     };
 
     document.addEventListener('mousemove', moveHandler);
-    document.addEventListener('mouseup', () => {
-      document.removeEventListener('mousemove', moveHandler);
-    });
+    document.addEventListener('mouseup', endDrag);
+    document.addEventListener('touchmove', moveHandler, { passive: false });
+    document.addEventListener('touchend', endDrag);
   };
 
   const renderTicks = () => {
@@ -135,7 +156,11 @@ const Dial = ({
   };
 
   return (
-    <div ref={dialRef} style={dialStyles.container} onMouseDown={startDrag}>
+    <div 
+      ref={dialRef} 
+      style={dialStyles.container} 
+      onMouseDown={startDrag}
+      onTouchStart={startDrag}>
       <div style={dialStyles.circle}></div>
       {renderTicks()}
       <div style={dialStyles.grip}></div>
