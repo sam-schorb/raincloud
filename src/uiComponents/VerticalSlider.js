@@ -33,37 +33,61 @@ const VerticalSlider = ({ id, value, onValueChange, textSizeRatio = 0.2 }) => {
     };
   }, []);
 
-  const handleMouseDown = useCallback((event) => {
-    sliderRef.current = event.currentTarget;
-    setIsDragging(true);
-    event.preventDefault();
-  }, []);
-
-  const handleMouseMove = useCallback((event) => {
-    if (!editMode && isDragging && sliderRef.current) {
+  const handleStartInteraction = (clientY) => {
+    if (!editMode && sliderRef.current) {
       const rect = sliderRef.current.getBoundingClientRect();
-      const y = event.clientY - rect.top;
+      const y = clientY - rect.top;
       const percentage = 100 - ((y / rect.height) * 100);
       const newValue = Math.min(Math.max(0, percentage), 100) / 100;
       setSliderValue(newValue);
       onValueChange && onValueChange(newValue);
     }
-  }, [editMode, isDragging, onValueChange]);
+  };
+
+  const handleMouseDown = useCallback((event) => {
+    setIsDragging(true);
+    handleStartInteraction(event.clientY);
+    event.preventDefault();
+  }, [handleStartInteraction]);
+
+  const handleMouseMove = useCallback((event) => {
+    if (isDragging) {
+      handleStartInteraction(event.clientY);
+    }
+  }, [isDragging, handleStartInteraction]);
 
   const handleMouseUp = useCallback(() => {
     setIsDragging(false);
-    onValueChange && onValueChange(sliderValue);
-  }, [sliderValue, onValueChange]);
+  }, []);
+
+  const handleTouchStart = useCallback((event) => {
+    setIsDragging(true);
+    handleStartInteraction(event.touches[0].clientY);
+  }, [handleStartInteraction]);
+
+  const handleTouchMove = useCallback((event) => {
+    if (isDragging) {
+      handleStartInteraction(event.touches[0].clientY);
+    }
+  }, [isDragging, handleStartInteraction]);
+
+  const handleTouchEnd = useCallback(() => {
+    setIsDragging(false);
+  }, []);
 
   useEffect(() => {
     document.addEventListener('mousemove', handleMouseMove);
     document.addEventListener('mouseup', handleMouseUp);
+    document.addEventListener('touchmove', handleTouchMove, { passive: false });
+    document.addEventListener('touchend', handleTouchEnd);
 
     return () => {
       document.removeEventListener('mousemove', handleMouseMove);
       document.removeEventListener('mouseup', handleMouseUp);
+      document.removeEventListener('touchmove', handleTouchMove);
+      document.removeEventListener('touchend', handleTouchEnd);
     };
-  }, [handleMouseMove, handleMouseUp]);
+  }, [handleMouseMove, handleMouseUp, handleTouchMove, handleTouchEnd]);
 
   const fontSize = size * textSizeRatio;
   const borderSize = Math.max(1, size * 0.05);
@@ -71,18 +95,18 @@ const VerticalSlider = ({ id, value, onValueChange, textSizeRatio = 0.2 }) => {
 
   return (
     <div ref={containerRef} style={{
-      display: 'flex', // Use flexbox for layout
-      justifyContent: 'center', // Center horizontally
-      alignItems: 'center', // Center vertically
+      display: 'flex',
+      justifyContent: 'center',
+      alignItems: 'center',
       position: 'relative',
-      height: `${sliderHeight}%`, // Dynamic height based on width
-      width: '75%', // Set width to 85% of the container
+      height: `${sliderHeight}%`,
+      width: '75%',
       border: `${borderSize}px solid #262626`,
-      margin: 'auto', // Added to ensure centering within the gridstack cell
+      margin: 'auto',
       borderRadius: '8px',
       backgroundClip: 'padding-box',
       boxSizing: 'border-box',
-    }} onMouseDown={handleMouseDown}>
+    }} onMouseDown={handleMouseDown} onTouchStart={handleTouchStart}>
       <div style={{
         position: 'absolute',
         width: '100%',
@@ -91,10 +115,10 @@ const VerticalSlider = ({ id, value, onValueChange, textSizeRatio = 0.2 }) => {
         borderRadius: '8px',
       }}>
         <span style={{
-            position: 'absolute',
-            display: 'flex', // Use flexbox for layout
-            justifyContent: 'center', // Center horizontally
-            alignItems: 'center', // Center vertically
+          position: 'absolute',
+          display: 'flex',
+          justifyContent: 'center',
+          alignItems: 'center',
           top: '50%',
           left: '50%',
           transform: 'translate(-50%, -50%)',
@@ -110,7 +134,7 @@ const VerticalSlider = ({ id, value, onValueChange, textSizeRatio = 0.2 }) => {
           position: 'absolute',
           width: '100%',
           height: '6.67%',
-          top: `calc(${100 - sliderValue * 100}% - 10px)`, // Adjusted thumb position
+          top: `calc(${100 - sliderValue * 100}% - 10px)`,
           background: '#6b6a6a',
           borderRadius: '8px',
           cursor: 'pointer',
