@@ -1,3 +1,4 @@
+/* eslint-disable react-hooks/exhaustive-deps */
 import React, { useEffect, useRef, useState, useCallback } from 'react';
 import ReactDOM from 'react-dom/client';
 import { GridStack } from 'gridstack';
@@ -186,11 +187,7 @@ useEffect(() => {
 }, [isUserInteracted, patchNumber, numColumns, dropdownNumColumns, responsiveNumColumns]); // Removed resizeGrid from the dependencies
 
 
-useEffect(() => {
-  if (UIAssociations.length > 0) {
-    loadInitialLayout();
-  }
-}, [UIAssociations]);
+
   
 
 
@@ -362,6 +359,12 @@ const initializeGrid = useCallback(() => {
       setLoading(false);
     }
   };
+
+  useEffect(() => {
+    if (UIAssociations.length > 0) {
+      loadInitialLayout();
+    }
+  }, [UIAssociations, loadInitialLayout]);
   
   
   const loadWidgetsToGrid = widgetsToLoad => {

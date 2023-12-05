@@ -1,3 +1,4 @@
+/* eslint-disable react-hooks/exhaustive-deps */
 import React, { useState, useCallback, useEffect, useRef } from 'react';
 import { useSelector } from 'react-redux';
 import { selectEditMode } from '../slices/modeSlice';
@@ -63,11 +64,13 @@ const VerticalSlider = ({ id, value, onValueChange, textSizeRatio = 0.2 }) => {
   const handleTouchStart = useCallback((event) => {
     setIsDragging(true);
     handleStartInteraction(event.touches[0].clientY);
+    event.preventDefault(); // Prevent default touch behavior
   }, [handleStartInteraction]);
 
   const handleTouchMove = useCallback((event) => {
     if (isDragging) {
       handleStartInteraction(event.touches[0].clientY);
+      event.preventDefault(); // Prevent default touch behavior
     }
   }, [isDragging, handleStartInteraction]);
 

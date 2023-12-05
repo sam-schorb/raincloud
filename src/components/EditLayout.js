@@ -1,3 +1,4 @@
+/* eslint-disable react-hooks/exhaustive-deps */
 import React, { useEffect, useRef, useState, useCallback } from 'react';
 import ReactDOM from 'react-dom/client';
 import { GridStack } from 'gridstack';
@@ -149,6 +150,7 @@ useEffect(() => {
   
     updateQueue.current.push({ cellHeight, effectiveNumColumns });
     setTimeout(applyGridStackChanges, 300);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [gridInitialized, responsiveNumColumns, gridWidth]); // Include gridWidth in dependencies
 
   
@@ -657,12 +659,6 @@ const handleCancel = () => {
     }
   };
   
-  const LabelComponent = ({ associationId }) => (
-    <div style={{ height: '50px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-      <span style={{ fontSize: '24px', textAlign: 'center' }}>{associationId}</span>
-    </div>
-  );
-  
 // Define a function that conditionally attaches event handlers to the widgets
 const attachEventHandlers = useCallback((widgetId, association, ComponentType) => {
   const eventHandlers = initializeEventHandlers(widgetId, association);
@@ -680,7 +676,7 @@ const attachEventHandlers = useCallback((widgetId, association, ComponentType) =
       </Provider>
     );
   }
-}, [currentDevice, store, showLabel]);
+}, [initializeEventHandlers, rootsMap]);
   
   const renderWidget = useCallback((widgetId, widgetEl, association) => {
     let ComponentType;
