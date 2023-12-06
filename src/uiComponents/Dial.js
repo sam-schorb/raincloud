@@ -12,13 +12,14 @@ const Dial = ({
   id
 }) => {
   const dialRef = useRef(null);
+  const startYRef = useRef(0); // Ref to store startY value
+  const isDraggingRef = useRef(false); // Ref to track if the dial is being dragged
   const [size, setSize] = useState(0);
   const [currentValue, setCurrentValue] = useState(value);
   const fullAngle = degrees;
   const startAngle = (360 - degrees) / 2;
   const endAngle = startAngle + degrees;
   const [deg, setDeg] = useState(((value - min) * (endAngle - startAngle)) / (max - min) + startAngle);
-
   const radius = size / 2;
 
   useEffect(() => {
@@ -43,48 +44,38 @@ const Dial = ({
     return ((oldValue - oldMin) * (newMax - newMin)) / (oldMax - oldMin) + newMin;
   }, []);
 
-  const startDrag = (e) => {
-    e.preventDefault();
-    let startY;
-    if (e.type === 'mousedown') {
-      startY = e.clientY;
-    } else if (e.type === 'touchstart') {
-      startY = e.touches[0].clientY;
+  const moveHandler = useCallback((moveEvent) => {
+    if (isDraggingRef.current) {
+      moveEvent.preventDefault(); // Prevent default only while dragging
     }
-  
-    const moveHandler = (moveEvent) => {
-      let currentY;
-      if (moveEvent.type === 'mousemove') {
-        currentY = moveEvent.clientY;
-      } else if (moveEvent.type === 'touchmove') {
-        currentY = moveEvent.touches[0].clientY;
-      }
-  
-      // Apply scaling factor for touch events
-      const touchSensitivityScale = moveEvent.type.startsWith('touch') ? 0.5 : 1;
-      const deltaY = (startY - currentY) * touchSensitivityScale;
-  
-      const dial = dialRef.current.getBoundingClientRect();
-      const deltaDeg = convertRange(0, dial.height, 0, fullAngle, deltaY);
-      let newDeg = Math.min(Math.max(startAngle, deg + deltaDeg), endAngle);
-      const newValue = convertRange(startAngle, endAngle, min, max, newDeg);
-  
-      setDeg(newDeg);
-      setCurrentValue(newValue);
-      onChange(newValue);
-    };
-  
 
-    const endDrag = () => {
-      document.removeEventListener('mousemove', moveHandler);
-      document.removeEventListener('touchmove', moveHandler);
-    };
+    let currentY = moveEvent.type === 'mousemove' ? moveEvent.clientY : moveEvent.touches[0].clientY;
+    const deltaY = (startYRef.current - currentY) * (moveEvent.type.startsWith('touch') ? 0.5 : 1);
+    const dial = dialRef.current.getBoundingClientRect();
+    const deltaDeg = convertRange(0, dial.height, 0, fullAngle, deltaY);
+    let newDeg = Math.min(Math.max(startAngle, deg + deltaDeg), endAngle);
+    const newValue = convertRange(startAngle, endAngle, min, max, newDeg);
 
+    setDeg(newDeg);
+    setCurrentValue(newValue);
+    onChange(newValue);
+  }, [convertRange, deg, fullAngle, startAngle, endAngle, min, max, onChange]);
+
+  const endDrag = useCallback(() => {
+    isDraggingRef.current = false; // Set dragging to false
+    document.removeEventListener('mousemove', moveHandler);
+    document.removeEventListener('touchmove', moveHandler);
+  }, [moveHandler]);
+
+  const startDrag = useCallback((e) => {
+    isDraggingRef.current = true; // Set dragging to true
+    startYRef.current = e.type === 'mousedown' ? e.clientY : e.touches[0].clientY;
     document.addEventListener('mousemove', moveHandler);
     document.addEventListener('mouseup', endDrag);
     document.addEventListener('touchmove', moveHandler, { passive: false });
     document.addEventListener('touchend', endDrag);
-  };
+  }, [moveHandler, endDrag]);
+
 
   const renderTicks = () => {
     const tickWidth = 2;
@@ -110,9 +101,7 @@ const Dial = ({
       );
     });
   };
- 
 
-  // Styles for the dial components
   const dialStyles = {
     container: {
       position: 'relative',
@@ -147,20 +136,16 @@ const Dial = ({
       top: '50%',
       left: '50%',
       transform: 'translate(-50%, -50%)',
-      fontSize: `${size * textSizeRatio}px`, // Font size as a ratio of the component size
-      color: 'black', // Adjust color as needed
+      fontSize: `${size * textSizeRatio}px`,
+      color: 'black',
       textAlign: 'center',
       userSelect: 'none',
-      zIndex: 3, // Ensuring label is on top
+      zIndex: 3,
     },
   };
 
   return (
-    <div 
-      ref={dialRef} 
-      style={dialStyles.container} 
-      onMouseDown={startDrag}
-      onTouchStart={startDrag}>
+    <div ref={dialRef} style={dialStyles.container} onMouseDown={startDrag} onTouchStart={startDrag}>
       <div style={dialStyles.circle}></div>
       {renderTicks()}
       <div style={dialStyles.grip}></div>
@@ -168,7 +153,5 @@ const Dial = ({
     </div>
   );
 };
-
-
 
 export default React.memo(Dial);

@@ -1,10 +1,12 @@
+/* eslint-disable react-hooks/exhaustive-deps */
 import React, { useState, useCallback, useEffect, useRef } from 'react';
 
 const VerticalSlider = ({ id, value, onValueChange, textSizeRatio = 0.2 }) => {
   const [sliderValue, setSliderValue] = useState(value || 0);
-
   const sliderRef = useRef(null);
   const containerRef = useRef(null);
+  const startYRef = useRef(0); // Ref to store startY value
+  const isDraggingRef = useRef(false); // Ref to track if the slider is being dragged
   const [size, setSize] = useState(0);
 
   useEffect(() => {
@@ -33,42 +35,37 @@ const VerticalSlider = ({ id, value, onValueChange, textSizeRatio = 0.2 }) => {
     return ((oldValue - oldMin) * (newMax - newMin)) / (oldMax - oldMin) + newMin;
   }, []);
 
-  const startDrag = (e) => {
-    e.preventDefault();
-    let startY;
-    if (e.type === 'mousedown') {
-      startY = e.clientY;
-    } else if (e.type === 'touchstart') {
-      startY = e.touches[0].clientY;
+  const moveHandler = useCallback((moveEvent) => {
+    if (isDraggingRef.current) {
+      moveEvent.preventDefault(); // Prevent default only while dragging
     }
+    
+    let currentY = moveEvent.type === 'mousemove' ? moveEvent.clientY : moveEvent.touches[0].clientY;
+    const rect = sliderRef.current.getBoundingClientRect();
+    const y = currentY - rect.top;
+    const percentage = 100 - ((y / rect.height) * 100);  
+    const newValue = Math.min(Math.max(percentage, 0), 100) / 100;
 
-    const moveHandler = (moveEvent) => {
-      let currentY;
-      if (moveEvent.type === 'mousemove') {
-        currentY = moveEvent.clientY;
-      } else if (moveEvent.type === 'touchmove') {
-        currentY = moveEvent.touches[0].clientY;
-      }
+    setSliderValue(newValue);
+    onValueChange && onValueChange(newValue);
+  }, [convertRange]);
 
-      const deltaY = startY - currentY;
-      const slider = sliderRef.current.getBoundingClientRect();
-      const percentage = convertRange(0, slider.height, 0, 100, deltaY);
-      const newValue = Math.min(Math.max(0, percentage), 100) / 100;
+  const endDrag = useCallback(() => {
+    isDraggingRef.current = false; // Set dragging to false
+    document.removeEventListener('mousemove', moveHandler);
+    document.removeEventListener('touchmove', moveHandler);
+  }, [moveHandler]);
 
-      setSliderValue(newValue);
-      onValueChange && onValueChange(newValue);
-    };
-
-    const endDrag = () => {
-      document.removeEventListener('mousemove', moveHandler);
-      document.removeEventListener('touchmove', moveHandler);
-    };
-
+  const startDrag = useCallback((e) => {
+    isDraggingRef.current = true; // Set dragging to true
+    startYRef.current = e.type === 'mousedown' ? e.clientY : e.touches[0].clientY;
     document.addEventListener('mousemove', moveHandler);
     document.addEventListener('mouseup', endDrag);
     document.addEventListener('touchmove', moveHandler, { passive: false });
     document.addEventListener('touchend', endDrag);
-  };
+  }, [moveHandler, endDrag]);
+
+
 
   const fontSize = size * textSizeRatio;
   const borderSize = Math.max(1, size * 0.05);
@@ -112,14 +109,14 @@ const VerticalSlider = ({ id, value, onValueChange, textSizeRatio = 0.2 }) => {
           {id}
         </span>
         <div style={{
-        position: 'absolute',
-        width: '100%',
-        height: '6.67%',
-        top: `calc(${100 - sliderValue * 98}% - 5px)`,
-        background: '#6b6a6a',
-        borderRadius: '8px',
-        cursor: 'pointer',
-      }} />
+          position: 'absolute',
+          width: '100%',
+          height: '6.67%',
+          top: `calc(${100 - sliderValue * 100}% - 10px)`,
+          background: '#6b6a6a',
+          borderRadius: '8px',
+          cursor: 'pointer',
+        }} />
       </div>
     </div>
   );
