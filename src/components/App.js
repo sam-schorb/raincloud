@@ -29,38 +29,36 @@ const DevicePage = React.lazy(() => import('./DevicePage'));
 const ArtistPage = React.lazy(() => import('./ArtistPage'));
 
 
-
 export const TempDataContext = React.createContext();
 
 function App() {
+  // State and Redux hooks
   const user = useSelector(selectUser);
-  const navigate = useNavigate();
+  const patchInfo = useSelector(selectPatchInfoData);
   const dispatch = useDispatch();
+  const navigate = useNavigate();
   const location = useLocation();
   const isLayoutLoaded = useState(false);
-  const patchInfo = useSelector(selectPatchInfoData);
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedFile, setSelectedFile] = useState(null);
   const [isAuthModalOpen, setIsAuthModalOpen] = useState(false);
   const [isMetadataModalOpen, setIsMetadataModalOpen] = useState(false);
-  const [isParametersModalOpen, setIsParametersModalOpen] = useState(false);  // State for parametersModal
+  const [isParametersModalOpen, setIsParametersModalOpen] = useState(false);
   const [notificationType, setNotificationType] = useState(null);
   const [notificationMessage, setNotificationMessage] = useState(null);
   const [tempData, setTempData] = useState({});
 
-
+  // Fetch patch information from server
   const fetchPatchInfo = useCallback(async () => {
     try {
       const res = await axios.get('/getPatchInfo');
       dispatch(setPatchInfoData(res.data));
-      return res.data;  // <-- Add this line to return the data
     } catch (error) {
       console.error('Error loading patch summaries:', error);
-      return null;  // Return null or some default value on failure
     }
   }, [dispatch]);
-  
 
+  // Notification message mapping
   const getNotificationMessage = (type) => {
     const messages = {
       'upload': 'Sign in to upload patches',
@@ -80,118 +78,70 @@ function App() {
     }
     return messages[type];
   };
-
+  
+  // Handle user logout process
   const handleLogout = async () => {
     try {
-        const response = await fetch('/logout', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            credentials: 'include'
-        });
+      const response = await fetch('/logout', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include'
+      });
 
-        let message = '';
-
-        if (response.ok) {
-            const data = await response.json();
-            dispatch(clearUser());
-            message = data || 'Logged out successfully';
-
-            // If on managePatches page, navigate to searchPage
-            if (location.pathname === '/managePatches') {
-              navigate('/');
-          }
-        } else if (response.headers.get('Content-Type').includes('application/json')) {
-            const data = await response.json();
-            message = data.message;
-        } else {
-            message = await response.text();
+      if (response.ok) {
+        dispatch(clearUser());
+        setNotificationType('Logged out successfully');
+        if (location.pathname === '/managePatches') {
+          navigate('/');
         }
-
+      } else {
+        const message = response.headers.get('Content-Type').includes('application/json') ?
+          (await response.json()).message : await response.text();
         setNotificationType(message);
+      }
 
-        // Clear the feedback message after 5 seconds
-        setTimeout(() => {
-            setNotificationType('');
-        }, 5000);
-
+      setTimeout(() => setNotificationType(''), 5000);
     } catch (error) {
-        console.error("Error:", error);
-        setNotificationType('Error during logout.');
-
-        // Clear the feedback message after 5 seconds
-        setTimeout(() => {
-            setNotificationType('');
-        }, 5000);
+      console.error("Error during logout:", error);
+      setNotificationType('Error during logout.');
+      setTimeout(() => setNotificationType(''), 5000);
     }
-};
+  };
 
+  // Require authentication for certain routes
+  const RequireAuth = ({ children }) => {
+    if (!user) return <Navigate to="/" replace />;
+    return children;
+  };
 
-// Route guard component
-const RequireAuth = ({ children }) => {
-  const user = useSelector(selectUser);
-
-  if (!user) {
-    // User is not logged in, redirect to the homepage
-    return <Navigate to="/" replace />;
-  }
-
-  return children;
-};
-
-
-
+  // Update notification message on type change
   useEffect(() => {
-    if (notificationType) {
-      const message = getNotificationMessage(notificationType);
-      setNotificationMessage(message || notificationType);
-    }
+    setNotificationMessage(getNotificationMessage(notificationType));
   }, [notificationType]);
 
+  // Check authentication and fetch patch info on mount
   useEffect(() => {
-
     fetchPatchInfo();
 
     const checkAuthentication = async () => {
       try {
         const response = await axios.get('/validateToken', { withCredentials: true });
-        if (response.data.isAuthenticated) {
-          dispatch(setUserAction(response.data.user));  // Use the 'user' field
-          console.log('User logged in automatically due to the presence of a valid token.');
-        } else {
-          console.log('No logged in user.');
-          dispatch(setUserAction(null));
-        }
+        dispatch(setUserAction(response.data.isAuthenticated ? response.data.user : null));
       } catch (error) {
-        if (error.response && error.response.status === 401) {
-          console.log('No token or token is invalid.');
-          dispatch(setUserAction(null));
-        } else {
-          console.error('Error while checking for a valid token:', error);
-          dispatch(setUserAction(null));
-        }
+        console.error('Error while checking for a valid token:', error);
+        dispatch(setUserAction(null));
       }
     };
-    
-    
 
     checkAuthentication();
   }, [dispatch, fetchPatchInfo]);
 
-  const openAuthModal = () => {
-    setIsAuthModalOpen(true);
-  };
+  // Modal control handlers
+  const openAuthModal = () => setIsAuthModalOpen(true);
+  const closeAuthModal = () => setIsAuthModalOpen(false);
+  const closeMetadataModal = () => setIsMetadataModalOpen(false);
+  const closeParametersModal = () => setIsParametersModalOpen(false);
 
-  const closeAuthModal = () => {
-    setIsAuthModalOpen(false);
-  };
-
-  const closeMetadataModal = () => {
-    setIsMetadataModalOpen(false);
-  };
-
-  const closeParametersModal = () => {
-    setIsParametersModalOpen(false);
-  };
 
   const AuthModalClickNext = () => {
     console.log('AuthModalClickNext called');

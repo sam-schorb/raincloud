@@ -70,9 +70,6 @@ const AuthModal = ({closeModal, setNotificationType}) => {
         }
     };
 
-    
-    
-
     const handleRegister = async () => {
         if (password !== confirmPassword) {
             setNotificationType('Passwords do not match.');
