@@ -1,10 +1,7 @@
 import React, { useState, useCallback, useEffect, useRef } from 'react';
-import { useSelector } from 'react-redux';
-import { selectEditMode } from '../slices/modeSlice';
 
 const HorizontalSlider = ({ id, value, onValueChange, textSizeRatio = 0.2 }) => {
   const [sliderValue, setSliderValue] = useState(value || 0);
-  const editMode = useSelector(selectEditMode);
 
   const sliderRef = useRef(null);
   const containerRef = useRef(null);
@@ -46,6 +43,7 @@ const HorizontalSlider = ({ id, value, onValueChange, textSizeRatio = 0.2 }) => 
     }
 
     const moveHandler = (moveEvent) => {
+      e.preventDefault();
       let currentX;
       if (moveEvent.type === 'mousemove') {
         currentX = moveEvent.clientX;
@@ -67,10 +65,10 @@ const HorizontalSlider = ({ id, value, onValueChange, textSizeRatio = 0.2 }) => 
       document.removeEventListener('touchmove', moveHandler);
     };
 
-    document.addEventListener('mousemove', moveHandler);
-    document.addEventListener('mouseup', endDrag);
+    document.addEventListener('mousemove', moveHandler, { passive: false });
+    document.addEventListener('mouseup', endDrag, { passive: false });
     document.addEventListener('touchmove', moveHandler, { passive: false });
-    document.addEventListener('touchend', endDrag);
+    document.addEventListener('touchend', endDrag, { passive: false });
   };
 
   const fontSize = size * textSizeRatio * 0.35;

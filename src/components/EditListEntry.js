@@ -41,11 +41,10 @@ const EditListEntry = (({ singlePatchInfo, handleOpenModal, handlePatchDeleted, 
     setIsImageLoaded(true);
   };
 
-  const handleSetPatchNumber = useCallback(() => {
-    console.log('patchNumber set to: ', singlePatchInfo._id)
+  const handleSetPatchNumber = () => {
     dispatch(setPatchNumber(singlePatchInfo._id));
-    dispatch(setDropdownNumColumns(null)); // Dispatch the new action
-  }, [dispatch, singlePatchInfo._id]);
+    navigate('/');
+  };
 
     const handleDeletePatch = async () => {
         try {

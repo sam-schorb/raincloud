@@ -241,6 +241,15 @@ app.post('/uploadPatch', authenticateJWT, upload.fields([{ name: 'patchFile', ma
         const userId = req.user.id;  // Assuming authenticateJWT middleware sets user info in req.user
         const username = req.user.username;
 
+        // Handle layout data
+        let layout;
+        try {
+            layout = JSON.parse(req.body.layout);
+        } catch (error) {
+            console.error('Error parsing layout:', error);
+            return res.status(400).send('Invalid layout data');
+        }
+
 
         if (!req.body.uiAssociations) {
             return res.status(400).send('UI Associations missing');
@@ -264,7 +273,7 @@ app.post('/uploadPatch', authenticateJWT, upload.fields([{ name: 'patchFile', ma
             username: username,
             uploadDate: currentDateTime,
             likeCount: 0,  // Initialize likeCount attribute to 0
-            layout: [],  // Empty array for layout initialization
+            layout: layout,  // Use the parsed layout
             colours: [],
             comments: [],
             numColumns: req.body.numColumns ? parseInt(req.body.numColumns, 10) : 16, // Set to provided value or default to 16

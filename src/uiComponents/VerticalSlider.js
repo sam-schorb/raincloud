@@ -41,8 +41,9 @@ const VerticalSlider = ({ id, value, onValueChange, textSizeRatio = 0.2 }) => {
     } else if (e.type === 'touchstart') {
       startY = e.touches[0].clientY;
     }
-
+  
     const moveHandler = (moveEvent) => {
+      moveEvent.preventDefault(); // Prevent default here as well
       let currentY;
       if (moveEvent.type === 'mousemove') {
         currentY = moveEvent.clientY;
@@ -68,6 +69,8 @@ const VerticalSlider = ({ id, value, onValueChange, textSizeRatio = 0.2 }) => {
     document.addEventListener('mouseup', endDrag);
     document.addEventListener('touchmove', moveHandler, { passive: false });
     document.addEventListener('touchend', endDrag);
+    sliderRef.current.addEventListener('touchmove', moveHandler, { passive: false });
+
   };
 
   const fontSize = size * textSizeRatio;

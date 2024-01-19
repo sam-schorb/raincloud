@@ -5,7 +5,7 @@ import { setPatchNumber } from '../slices/patchInfoSlice';
 import { likePatch, unlikePatch } from '../slices/likedPatchesSlice';
 import { AiOutlineHeart, AiFillHeart } from 'react-icons/ai';
 import Notification from './Notification';
-import { Link } from 'react-router-dom';
+import { useNavigate, Link } from 'react-router-dom';
 
 const ImagePlaceholder = () => (
   <div className="animate-pulse bg-gray-300 w-full h-12"></div> // Adjust the size as needed
@@ -13,7 +13,7 @@ const ImagePlaceholder = () => (
 
 const ListEntry = (({ singlePatchInfo, userId, hasLiked, likeCount, isArtistPage }) => {
   const dispatch = useDispatch();
-
+  const navigate = useNavigate();
 const [isLoading] = useState(false);
 const [isHovered, setIsHovered] = useState(false);
 const [localHasLiked, setLocalHasLiked] = useState(hasLiked);
@@ -24,10 +24,9 @@ const [imageSrc, setImageSrc] = useState(null); // State to hold the image sourc
 const [isImageLoaded, setIsImageLoaded] = useState(false); // State to track image loading
 
 useEffect(() => {
-  // Function to fetch the image data
-  const fetchImageData = async () => {
+  const fetchImageData = async (patchId) => {
     try {
-      const response = await fetch(`/patchImage/${singlePatchInfo._id}`);
+      const response = await fetch(`/patchImage/${patchId}`);
       if (!response.ok) throw new Error(response.statusText);
       const imageData = await response.json();
       setImageSrc(`data:image/png;base64,${imageData}`);
@@ -36,8 +35,10 @@ useEffect(() => {
     }
   };
 
-  fetchImageData();
-}, [singlePatchInfo._id]);
+  if (singlePatchInfo._id && !imageSrc) {
+    fetchImageData(singlePatchInfo._id);
+  }
+}, [singlePatchInfo._id, imageSrc]);
 
 const onImageLoad = () => {
   setIsImageLoaded(true);
@@ -68,9 +69,10 @@ const onImageLoad = () => {
     }
   }, [userId, dispatch, localHasLiked, singlePatchInfo._id, localLikeCount]);
 
-  const handleSetPatchNumber = useCallback(() => {
+  const handleSetPatchNumber = () => {
     dispatch(setPatchNumber(singlePatchInfo._id));
-  }, [dispatch, singlePatchInfo._id]);
+    navigate('/');
+  };
 
     const handleUsernameClick = (e) => {
         // Stop the event from propagating to the parent elements
@@ -97,6 +99,8 @@ const onImageLoad = () => {
         return Math.floor(seconds) + "s";
     }, []);
 
+    
+
 
     return (
         <div>
@@ -112,9 +116,8 @@ const onImageLoad = () => {
                 {/* Placeholder div */}
                 <div className="lg:col-span-1 hidden lg:inline-block"></div>
                 {/* Image */}
-                {singlePatchInfo.image && !isLoading && (
                 <div className="col-span-1 w-12 h-12 flex-shrink-0">
-                {!isImageLoaded && <ImagePlaceholder />}
+              {!isImageLoaded && !imageSrc && <ImagePlaceholder />}
                 {imageSrc && (
                 <img
                 src={imageSrc}
@@ -122,10 +125,9 @@ const onImageLoad = () => {
                 className="w-12 h-12 object-cover"
                 onLoad={onImageLoad}
                 style={{ display: isImageLoaded ? 'block' : 'none' }} // Directly using inline style for visibility
-              />
-                )}
+              /> )}
               </div>
-                )}
+      
                 {/* Patch name */}
                 <span className="col-span-5 lg:col-span-3 col-start-3 lg:col-span-2 truncate">
                     {!isLoading ? singlePatchInfo.name : 'Loading...'}

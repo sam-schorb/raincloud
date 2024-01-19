@@ -25,7 +25,7 @@ const Dial = ({
     const updateSize = () => {
       if (dialRef.current) {
         const rect = dialRef.current.getBoundingClientRect();
-        setSize(Math.min(rect.width, rect.height)); // Use the smaller dimension for a square aspect ratio
+        setSize(Math.min(rect.width, rect.height));
       }
     };
 
@@ -34,9 +34,7 @@ const Dial = ({
       resizeObserver.observe(dialRef.current);
     }
 
-    return () => {
-      resizeObserver.disconnect();
-    };
+    return () => resizeObserver.disconnect();
   }, []);
 
   const convertRange = useCallback((oldMin, oldMax, newMin, newMax, oldValue) => {
@@ -45,45 +43,38 @@ const Dial = ({
 
   const startDrag = (e) => {
     e.preventDefault();
-    let startY;
-    if (e.type === 'mousedown') {
-      startY = e.clientY;
-    } else if (e.type === 'touchstart') {
-      startY = e.touches[0].clientY;
-    }
-  
+    let startY = e.type === 'mousedown' ? e.clientY : e.touches[0].clientY;
+
     const moveHandler = (moveEvent) => {
-      let currentY;
-      if (moveEvent.type === 'mousemove') {
-        currentY = moveEvent.clientY;
-      } else if (moveEvent.type === 'touchmove') {
-        currentY = moveEvent.touches[0].clientY;
+      if (moveEvent.cancelable) {
+        moveEvent.preventDefault(); // Only call if the event is cancelable
       }
-  
-      // Apply scaling factor for touch events
+      let currentY = moveEvent.type === 'mousemove' ? moveEvent.clientY : moveEvent.touches[0].clientY;
+
       const touchSensitivityScale = moveEvent.type.startsWith('touch') ? 0.5 : 1;
       const deltaY = (startY - currentY) * touchSensitivityScale;
-  
+
       const dial = dialRef.current.getBoundingClientRect();
       const deltaDeg = convertRange(0, dial.height, 0, fullAngle, deltaY);
       let newDeg = Math.min(Math.max(startAngle, deg + deltaDeg), endAngle);
       const newValue = convertRange(startAngle, endAngle, min, max, newDeg);
-  
+
       setDeg(newDeg);
       setCurrentValue(newValue);
       onChange(newValue);
     };
-  
 
     const endDrag = () => {
       document.removeEventListener('mousemove', moveHandler);
       document.removeEventListener('touchmove', moveHandler);
     };
 
-    document.addEventListener('mousemove', moveHandler);
-    document.addEventListener('mouseup', endDrag);
+    // Add touchmove with { passive: false } to handle preventDefault correctly
     document.addEventListener('touchmove', moveHandler, { passive: false });
-    document.addEventListener('touchend', endDrag);
+    document.addEventListener('mousemove', moveHandler);
+    document.addEventListener('mouseup', endDrag, { passive: false });
+    document.addEventListener('touchend', endDrag, { passive: false });
+    dialRef.current.addEventListener('touchmove', moveHandler, { passive: false });
   };
 
   const renderTicks = () => {

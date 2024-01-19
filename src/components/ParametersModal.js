@@ -49,6 +49,49 @@ function ParametersModal({ isOpen, closeModal, fetchPatches, fetchPatchInfo, sel
     setParamUIAssociations(updatedAssociations);
   };
 
+  // Add this function inside ParametersModal component
+function generateDefaultLayout(uiAssociations) {
+  const layout = [];
+  let xPosition = 0, yPosition = 0;
+  let vSliderHeightInColumn = {};
+
+  Object.entries(uiAssociations).forEach(([id, type], index) => {
+    const widgetId = `${type}${index + 1}`;
+    const content = `<div id="${widgetId}" style="width:100%; height:100%;"></div>`;
+
+    // Adjust x and y based on vSliders
+    if (vSliderHeightInColumn[xPosition]) {
+      yPosition = vSliderHeightInColumn[xPosition];
+    }
+
+    const layoutItem = {
+      content,
+      x: xPosition,
+      y: yPosition,
+      association: { id, type },
+      id: widgetId
+    };
+
+    if (type === 'vslider') {
+      layoutItem.h = 3;
+      vSliderHeightInColumn[xPosition] = (vSliderHeightInColumn[xPosition] || 0) + 3;
+    }
+
+    if (type === 'hslider') {
+      layoutItem.w = 3;
+      xPosition += 2; // hslider takes 3 columns, already incremented by 1 below
+    }
+
+    layout.push(layoutItem);
+
+    // Increment x and wrap around if necessary
+    xPosition = (xPosition + 1) % 16;
+    if (xPosition === 0) yPosition++;
+  });
+
+  return layout;
+}
+
   const handleFinalSave = async () => {
     const formData = new FormData();
     formData.append('patchFile', selectedFile);
@@ -60,6 +103,8 @@ function ParametersModal({ isOpen, closeModal, fetchPatches, fetchPatchInfo, sel
     if (tempData.selectedImage) {
       formData.append('imageFile', tempData.selectedImage);
     }
+    const defaultLayout = generateDefaultLayout(paramUIAssociations);
+    formData.append('layout', JSON.stringify(defaultLayout));
   
 
     try {
