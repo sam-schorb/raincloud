@@ -22,8 +22,8 @@ const PORT = process.env.PORT || 3001; // Use default port if not on Heroku
 
 // **Middlewares**
 app.use(cookieParser());
-app.use(express.json());
-app.use(express.urlencoded({ extended: true }));
+app.use(express.json({ limit: '10mb' }));
+app.use(express.urlencoded({ limit: '10mb', extended: true }));
 
 // CORS Configuration
 const allowedOrigins = [
@@ -389,6 +389,8 @@ app.get('/getComments', async (req, res) => {
     }
 });
 
+
+app.use('/updateLayout/:patchNumber', express.json({ limit: '10mb' }));
 
 app.put('/updateLayout/:patchNumber', authenticateJWT, async (req, res) => {
     try {
