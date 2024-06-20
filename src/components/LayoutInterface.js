@@ -105,7 +105,7 @@ useEffect(() => {
     }
   };
 
-
+//only runs when currentWidth !== lastWidth.current. needs to run every time i open the page
 // Function to update gridWidth
 const updateGridWidth = () => {
   if (gridRef.current) {
@@ -117,17 +117,19 @@ const updateGridWidth = () => {
   }
 };
 
-// useEffect to log gridWidth changes
-useEffect(() => {
-  console.log("Grid width changed:", gridWidth);
-}, [gridWidth]);
+const initialiseGridWidth = (userIsInteracted) => {
+  if (gridRef.current && !userIsInteracted) {
+    const currentWidth = gridRef.current.offsetWidth;
+    setGridWidth(currentWidth); // Always update the state
+    console.log('grid width set', gridWidth)
+    lastWidth.current = currentWidth;
+  }
+};
+
 
 // Add window resize listener to update gridWidth
 useEffect(() => {
   window.addEventListener("resize", updateGridWidth);
-
-  // Initial update
-  updateGridWidth();
 
   // Cleanup
   return () => {
@@ -180,15 +182,10 @@ useEffect(() => {
         if (currentDevice?.messageEvent) {
           currentDevice.messageEvent.unsubscribe(subscribeToOutportMessages);
         }
-        // destroyAllEventHandlers(); // If defined
       }
     };
   }
-}, [isUserInteracted, patchNumber, numColumns, dropdownNumColumns, responsiveNumColumns]); // Removed resizeGrid from the dependencies
-
-
-
-  
+}, [isUserInteracted, patchNumber]);
 
 
 const initializeGrid = useCallback(() => {
@@ -208,7 +205,7 @@ const initializeGrid = useCallback(() => {
   }, gridRef.current);
     removeAllWidgets();
     setGridInitialized(true); // Set the flag here
-  
+    initialiseGridWidth();
     resizeGrid();
     window.addEventListener('resize', resizeGrid);
     console.log('grid initialised, num columns: ', numColumns)
@@ -334,9 +331,11 @@ const initializeGrid = useCallback(() => {
           // Store the server value in a variable
           const serverNumColumns = layoutData.numColumns || 16; // default to 16 if null or undefined    
 
-    
           // Dispatch the decided value to the Redux store
           dispatch(setNumColumns(serverNumColumns));
+
+          // Set the numColumns state directly as a fallback
+          setNumColumns(serverNumColumns);
         }
   
         if (!layoutData.layout || !Array.isArray(layoutData.layout) || layoutData.layout.length === 0) {
@@ -344,6 +343,8 @@ const initializeGrid = useCallback(() => {
           generateWidgets();
         } else {
           const widgets = await fetchAndProcessGridData(layoutData); // Ensure this function expects the raw array
+          setNumColumns(layoutData.numColumns);
+
           loadWidgetsToGrid(widgets);
         }
         
@@ -363,11 +364,13 @@ const initializeGrid = useCallback(() => {
   useEffect(() => {
     if (UIAssociations.length > 0) {
       loadInitialLayout();
+      
     }
   }, [UIAssociations]);
   
   
   const loadWidgetsToGrid = widgetsToLoad => {
+
     console.log('Widgets to load: ', widgetsToLoad);
     
     if (!gridStackInstance.current) {
@@ -715,6 +718,7 @@ const getComponentTypeFromWidgetId = (widgetId) => {
 
   // Replace the loading conditional with a check for patchNumber
   if (!isUserInteracted && patchNumber) {
+
     return (
       <div style={{ width: '100%', display: 'flex', justifyContent: 'center' }}>
           <button 

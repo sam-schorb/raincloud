@@ -351,6 +351,27 @@ app.put('/updatePatch/:patchId', authenticateJWT, upload.fields([{ name: 'patchF
     }
 });
 
+app.get('/patch/:patchNumber', async (req, res) => {
+    const patchNumber = req.params.patchNumber;
+  
+    try {
+      // Retrieve the patch data from the database based on the patchNumber
+      const patch = await patchesCollection.findOne({ _id: new ObjectId(patchNumber) });
+  
+      if (patch) {
+        // If the patch exists, send the patch data as the response
+        res.json(patch);
+      } else {
+        // If the patch doesn't exist, send a 404 error response
+        res.status(404).json({ error: 'Patch not found' });
+      }
+    } catch (error) {
+      // Handle any errors that occurred during the database query
+      console.error('Error retrieving patch:', error);
+      res.status(500).json({ error: 'Internal server error' });
+    }
+  });
+
 app.post('/postComment', authenticateJWT, async (req, res) => {
     try {
         const patchId = req.body.patchId;

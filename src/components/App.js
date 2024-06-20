@@ -28,8 +28,6 @@ const EditLayout = React.lazy(() => import('./EditLayout'));
 const DevicePage = React.lazy(() => import('./DevicePage'));
 const ArtistPage = React.lazy(() => import('./ArtistPage'));
 
-
-
 export const TempDataContext = React.createContext();
 
 function App() {
@@ -47,7 +45,7 @@ function App() {
   const [notificationType, setNotificationType] = useState(null);
   const [notificationMessage, setNotificationMessage] = useState(null);
   const [tempData, setTempData] = useState({});
-
+  const { pathname } = useLocation();
 
   const fetchPatchInfo = useCallback(async () => {
     try {
@@ -224,19 +222,16 @@ const RequireAuth = ({ children }) => {
     }
   }, [location.pathname, dispatch]);
 
-// In your App component
-const { pathname } = useLocation();
+  // Updated regex to match both '/patch/' and '/editLayout/' paths
+  const match = pathname.match(/^\/(patch|editLayout)\/(.+)/);
+  const patchIdFromURL = match ? match[2] : null; // match[2] will contain the patch ID
 
-// Updated regex to match both '/patch/' and '/editLayout/' paths
-const match = pathname.match(/^\/(patch|editLayout)\/(.+)/);
-const patchIdFromURL = match ? match[2] : null; // match[2] will contain the patch ID
-
-useEffect(() => {
-  // Only dispatch setPatchNumber if the app is initialized and the URL contains a patch ID
-  if (patchIdFromURL) {
-    dispatch(setPatchNumber(patchIdFromURL));
-  }
-}, [dispatch, patchIdFromURL]);
+  useEffect(() => {
+    // Only dispatch setPatchNumber if the app is initialized and the URL contains a patch ID
+    if (patchIdFromURL) {
+      dispatch(setPatchNumber(patchIdFromURL));
+    }
+  }, [dispatch, patchIdFromURL]);
 
 
  // Use effect to set up user interaction detection
@@ -338,6 +333,8 @@ return (
           <Route path="/device/:patchId" element={<DevicePage/>} />
           <Route path="/:username" element={<ArtistPage />} />
           <Route path="/artist/:username" element={<ArtistPage />} />
+          <Route path="/patch/:patchNumber" element={<HomePage />} />
+
       </Routes>
       </Suspense>
   </div>
