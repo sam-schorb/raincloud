@@ -1,6 +1,9 @@
 {
   "name": "simplealarm6-reactversion",
   "version": "0.1.0",
+  "engines": {
+    "node": "20.x"
+  },
   "private": true,
   "dependencies": {
     "@reduxjs/toolkit": "^1.9.5",
