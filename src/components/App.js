@@ -1,10 +1,11 @@
 import React, { useEffect, useState, useCallback, Suspense } from 'react';
 import { Routes, Route, Link, useLocation, useNavigate, Navigate } from 'react-router-dom';
-import { FaSearch, FaSignInAlt, FaUpload } from 'react-icons/fa';
+import { FaSearch, FaSignInAlt, FaUpload, FaQuestion } from 'react-icons/fa';
 import axios from 'axios';
 import Setup from './Setup';
 import MetadataModal from './MetadataModal';
 import AuthModal from './AuthModal';
+import WelcomeModal from './WelcomeModal';
 import EmailVerification from './EmailVerification';
 import ResetPasswordForm from './ResetPasswordForm';
 import { useSelector, useDispatch } from 'react-redux';
@@ -42,6 +43,7 @@ function App() {
   const [isAuthModalOpen, setIsAuthModalOpen] = useState(false);
   const [isMetadataModalOpen, setIsMetadataModalOpen] = useState(false);
   const [isParametersModalOpen, setIsParametersModalOpen] = useState(false);  // State for parametersModal
+  const [isWelcomeModalOpen, setIsWelcomeModalOpen] = useState(true);
   const [notificationType, setNotificationType] = useState(null);
   const [notificationMessage, setNotificationMessage] = useState(null);
   const [tempData, setTempData] = useState({});
@@ -207,6 +209,10 @@ const RequireAuth = ({ children }) => {
     }
   };
 
+  const openWelcomeModal = () => {
+    setIsWelcomeModalOpen(true);
+  };
+
   useEffect(() => {
     const pathsToReset = [
       '/explore',
@@ -268,13 +274,16 @@ return (
               <span className="hidden md:inline-block text-medium-gray text-l ml-4">RainCloud</span>
           </a>
       </div>
-          <div className="w-full md:w-2/3 grid grid-cols-4 text-center text-l">
+          <div className="w-full md:w-2/3 grid grid-cols-5 text-center text-l">
               <HomeRandomButton />
               <Link to="/explore" className="text-medium-gray hover:text-white p-2 flex justify-center items-center transition-colors duration-300">
                   <FaSearch className="text-icon-lg sm:text-icon-lg md:text-base lg:text-base mr-3 md:mr-5" /><span className="hidden md:inline-block">Explore</span>
               </Link>
               <div className="text-medium-gray hover:text-white p-2 flex justify-center items-center transition-colors duration-300" onClick={openUpload}>
                   <FaUpload className="text-icon-lg sm:text-icon-lg md:text-base lg:text-base mr-3 md:mr-5" /><span className="hidden md:inline-block">Upload</span>
+              </div>
+              <div className="text-medium-gray hover:text-white p-2 flex justify-center items-center transition-colors duration-300" onClick={openWelcomeModal}>
+                  <FaQuestion className="text-icon-lg sm:text-icon-lg md:text-base lg:text-base mr-3 md:mr-5" /><span className="hidden md:inline-block">Help</span>
               </div>
               {user ? (
                   <div className="text-medium-gray hover:text-white p-2 flex justify-center items-center transition-colors duration-300">
@@ -293,6 +302,7 @@ return (
           <MetadataModal selectedFile={selectedFile} setSelectedFile={setSelectedFile} isOpen={isMetadataModalOpen} closeModal={closeMetadataModal} fetchPatchInfo={fetchPatchInfo} AuthModalClickNext={AuthModalClickNext} />
           <ParametersModal selectedFile={selectedFile} isOpen={isParametersModalOpen} closeModal={closeParametersModal} fetchPatches={fetchPatchInfo} fetchPatchInfo={fetchPatchInfo} setNotificationType={setNotificationType} />
       </TempDataContext.Provider>
+      <WelcomeModal isOpen={isWelcomeModalOpen} closeModal={() => setIsWelcomeModalOpen(false)} />
       <Setup isLayoutLoaded={isLayoutLoaded} />
       <Suspense fallback={<div>Loading...</div>}>
       <Routes>
