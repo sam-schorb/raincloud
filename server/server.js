@@ -5,6 +5,7 @@ const { MongoClient } = require('mongodb');
 const { ObjectId } = require('mongodb');
 const cors = require('cors');
 const path = require('path');
+const fs = require('fs');
 const bcrypt = require('bcryptjs');
 const crypto = require('crypto');
 const jwt = require('jsonwebtoken');
@@ -30,14 +31,24 @@ const allowedOrigins = [
     'http://localhost:3000',
     'https://localhost:3000',
     'https://www.iimaginary.com',
-    'https://raincloud-d329266a7219.herokuapp.com/',
     'https://raincloud.iimaginary.com',
     'https://raincloud.vercel.app',
+    'https://raincloud-6mta3nrbh-sam-schorbs-projects.vercel.app',
     process.env.FRONTEND_URL,
 ].filter(Boolean);
+
+const vercelPreviewPattern = /^https:\/\/.*\.vercel\.app$/;
+
 app.use(cors({
-    origin: allowedOrigins,
-    credentials: true
+    credentials: true,
+    origin: (origin, callback) => {
+        // Allow non-browser requests (like curl) with no origin
+        if (!origin) return callback(null, true);
+        if (allowedOrigins.includes(origin) || vercelPreviewPattern.test(origin)) {
+            return callback(null, true);
+        }
+        return callback(new Error('Not allowed by CORS'));
+    }
 }));
 
 // Allow API calls with an /api prefix (used by the frontend proxy/rewrite).
@@ -1403,21 +1414,21 @@ app.get('/userLikes/:userId', async (req, res) => {
     }
 });
 
-if (process.env.NODE_ENV === 'production') {
-    // Serve any static files
-    app.use(express.static(path.resolve(__dirname, '../build')));
+// Serve frontend assets when available and enabled.
+const shouldServeFrontend = process.env.SERVE_FRONTEND !== 'false';
+const buildDir = path.resolve(__dirname, '../build');
+const buildIndex = path.join(buildDir, 'index.html');
 
-// Handle React routing, return all requests to React app
-app.get('*', function(req, res) {
-    res.sendFile(path.resolve(__dirname, '../build', 'index.html'));
-});
-} else {
-    // For non-production environments
-    // Make sure this does not interfere with API routes
-    app.use('/static', express.static(path.join(__dirname, '../public')));
-    app.get('*', (req, res) => {
-        res.sendFile(path.join(__dirname, '../public/index.html'));
+if (shouldServeFrontend && fs.existsSync(buildIndex)) {
+    // Serve any static files
+    app.use(express.static(buildDir));
+
+    // Handle React routing, return all requests to React app
+    app.get('*', function(req, res) {
+        res.sendFile(buildIndex);
     });
+} else {
+    console.log('Static frontend serving is disabled or build not found; API-only mode.');
 }
 
 app.listen(PORT, () => {
