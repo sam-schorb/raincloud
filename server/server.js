@@ -40,6 +40,16 @@ app.use(cors({
     credentials: true
 }));
 
+// Allow API calls with an /api prefix (used by the frontend proxy/rewrite).
+app.use((req, res, next) => {
+    if (req.url === '/api') {
+        req.url = '/';
+    } else if (req.url.startsWith('/api/')) {
+        req.url = req.url.slice(4); // strip leading "/api"
+    }
+    next();
+});
+
 
 
 // Initialize Mailjet
