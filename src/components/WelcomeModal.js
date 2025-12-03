@@ -11,6 +11,8 @@ function WelcomeModal({ isOpen, closeModal }) {
   const patchNumber = useSelector(selectPatchNumber);
   const patchInfo = useSelector(selectPatchInfoData);
 
+  const animationDurationMs = 550;
+
   const closeModalWithTransitionAndSelectRandomPatch = () => {
     setIsClosing(true);
     setTimeout(() => {
@@ -19,7 +21,7 @@ function WelcomeModal({ isOpen, closeModal }) {
       if (!isUserInteracted && patchNumber == null) {
         selectRandomPatchId();
       }
-    }, 1000);
+    }, animationDurationMs);
   };
 
   const selectRandomPatchId = () => {
@@ -44,143 +46,169 @@ function WelcomeModal({ isOpen, closeModal }) {
       <style jsx>{`
         @keyframes modalOpenAnimation {
           from {
-            width: 100%;
-            height: 0;
-            background: rgba(0, 0, 0, 0);
-            border: 0px;
+            transform: translateY(16px) scale(0.94);
+            opacity: 0;
+            clip-path: inset(32% 18% 32% 18%);
           }
           to {
-            width: 70%;
-            height: 70%;
-            background: rgba(0, 0, 0, 1);
-            border: 1px solid white;
+            transform: translateY(0) scale(1);
+            opacity: 1;
+            clip-path: inset(0 0 0 0);
+          }
+        }
+        @keyframes modalCloseAnimation {
+          from {
+            transform: translateY(0) scale(1);
+            opacity: 1;
+            clip-path: inset(0 0 0 0);
+          }
+          to {
+            transform: translateY(16px) scale(0.94);
+            opacity: 0;
+            clip-path: inset(32% 18% 32% 18%);
           }
         }
         #info-container {
           position: fixed;
-          top: 0px;
-          left: 0px;
-          width: 100%;
-          height: 100%;
-          z-index: 80;
+          inset: 0;
+          background: rgba(0, 0, 0, 0.55);
           display: flex;
           align-items: center;
           justify-content: center;
-          transition: height 1s;
+          z-index: 80;
           font-family: 'Chivo', sans-serif;
+          transition: opacity ${animationDurationMs}ms ease;
         }
-
-        #info-container.hidden {
-          height: 40px;
-          padding: 0px;
-          pointer-events: none;
-        }
-
         #modal {
           position: relative;
-          width: 70%;
-          height: 70%;
-          min-width: 800px;
-          min-height: 300px;
-          background: rgba(0, 0, 0, 1);
-          border: 1px solid white;
-          padding: 0px;
-          margin: 0px;
+          width: min(820px, 82vw);
+          min-width: 320px;
+          min-height: 320px;
+          max-height: 80vh;
+          background: #000;
+          border: 1px solid rgba(255, 255, 255, 0.12);
+          border-radius: 16px;
+          box-shadow: 0 28px 80px rgba(0, 0, 0, 0.6), 0 12px 30px rgba(0, 0, 0, 0.4);
+          color: #e8ecf3;
           display: flex;
-          flex-flow: column;
-          transition: background 1s, width 1s, height 1s, border 1s;
+          flex-direction: column;
+          overflow: hidden;
+          animation-duration: ${animationDurationMs}ms;
+          animation-timing-function: ease;
+          animation-fill-mode: forwards;
         }
-
-        @media (max-width: 768px) {
-          #modal {
-            width: 100%;
-            min-width: 0px;
-          }
+        #modal.opening {
+          animation-name: modalOpenAnimation;
         }
-
-        .hidden > #modal {
-          width: 100%;
-          min-height: 0px;
-          background: rgba(0, 0, 0, 0);
-          border: 0px;
-          pointer-events: none;
+        #modal.closing {
+          animation-name: modalCloseAnimation;
         }
-
         #modal-body {
-          font-family: 'Chivo', sans-serif;
           width: 100%;
           flex: 1;
           overflow-y: auto;
         }
-
         #modal-content {
-          margin: 40px;
-          margin-left: 65px;
-          margin-right: 65px;
-          font-weight: 300;
+          padding: 32px 42px 38px 42px;
+          display: grid;
+          gap: 14px;
         }
-
-        #modal-content > h1 {
-          font-size: 40px;
-          margin: 0px;
-          font-weight: 400;
+        #modal-content h1 {
+          margin: 0;
+          font-size: 30px;
+          letter-spacing: -0.01em;
         }
-
-        #modal-content > h3 {
-          margin: 0px;
-          text-transform: uppercase;
-          font-weight: 400;
+        #modal-content p {
+          margin: 0;
+          font-size: 16px;
+          line-height: 1.6;
+          color: #cdd5df;
         }
-
-        #modal-content > h4 {
-          font-weight: 300;
-          font-size: 18px;
+        .steps {
+          display: grid;
+          gap: 8px;
+          padding-left: 18px;
         }
-
-        #modal-content > p {
-          font-size: 18px;
-          font-weight: 300;
+        .step {
+          list-style: decimal;
+          color: #cdd5df;
+          line-height: 1.5;
         }
-
-        ::-webkit-scrollbar {
-          width: 20px;
+        .step em {
+          color: #ffffff;
+          font-style: normal;
+          font-weight: 600;
         }
-
-        #modal-body::-webkit-scrollbar-track {
-          background-color: black;
-          border: 1px solid white;
-        }
-
-        #modal-body::-webkit-scrollbar-thumb {
-          background: black;
-          border: 2px solid white;
-          cursor: pointer;
-        }
-
-        #modal.opening {
-          animation: modalOpenAnimation 1s forwards;
-        }
-
         #close-button {
           position: absolute;
-          top: 10px;
-          right: 10px;
+          top: 12px;
+          right: 12px;
+          width: 34px;
+          height: 34px;
+          border-radius: 8px;
+          border: 1px solid rgba(255, 255, 255, 0.2);
+          background: rgba(255, 255, 255, 0.06);
+          color: #e8ecf3;
+          font-size: 18px;
+          display: grid;
+          place-items: center;
           cursor: pointer;
-          font-size: 24px;
-          color: white;
+          transition: background 120ms ease, transform 120ms ease;
+        }
+        #close-button:hover {
+          background: rgba(255, 255, 255, 0.14);
+          transform: scale(1.03);
+        }
+        @media (max-width: 768px) {
+          #modal {
+            width: 94%;
+            height: 70vh;
+            min-height: 320px;
+          }
+          #modal-content {
+            padding: 26px 22px 30px 22px;
+          }
+          #modal-content h1 {
+            font-size: 24px;
+          }
         }
       `}</style>
 
-      <div id="info-container" className={isClosing ? 'hidden' : ''} onClick={handleContainerClick}>
-        <div id="modal" className={isOpen ? 'opening' : ''}>
-          <div id="modal-header"></div>
+      <div
+        id="info-container"
+        className={isClosing ? 'closing' : 'opening'}
+        style={{ opacity: isClosing ? 0 : 1 }}
+        onClick={handleContainerClick}
+      >
+        <div id="modal" className={isClosing ? 'closing' : 'opening'}>
+          <button id="close-button" aria-label="Close" onClick={closeModalWithTransitionAndSelectRandomPatch}>
+            ×
+          </button>
           <div id="modal-body">
             <div id="modal-content">
-              <h1>I am a Modal Window</h1>
-              <p>Your Welcome modal content here.</p>
+              <h1>RainCloud</h1>
+              <p>
+                A quick guide to get playing and uploading RNBO patches in the browser:
+              </p>
+              <ol className="steps">
+                <li className="step">
+                  Load a patch fast with <em>Random</em> in the top bar or the Start button.
+                </li>
+                <li className="step">
+                  Use <em>Explore</em> to search by name/artist, filter by tags, and sort by newest, popular, or random.
+                </li>
+                <li className="step">
+                  Play the grid of knobs, sliders, switches, and buttons—each is mapped to RNBO parameters or outports.
+                </li>
+                <li className="step">
+                  Sign in to favourite patches, leave comments, and manage your own uploads and layouts.
+                </li>
+                <li className="step">
+                  Upload your RNBO export, add tags, an image, and an optional link; RainCloud auto-builds a starter layout you can refine.
+                </li>
+              </ol>
             </div>
           </div>
-          <div id="close-button" onClick={closeModalWithTransitionAndSelectRandomPatch}>X</div>
         </div>
       </div>
     </>

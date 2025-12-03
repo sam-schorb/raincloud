@@ -8,7 +8,9 @@ const VerticalSlider = ({ id, value, onValueChange, textSizeRatio = 0.2 }) => {
   const [size, setSize] = useState(0);
 
   useEffect(() => {
-    setSliderValue(value);
+    if (value !== undefined && value !== null) {
+      setSliderValue(value);
+    }
   }, [value]);
 
   useEffect(() => {
@@ -36,6 +38,7 @@ const VerticalSlider = ({ id, value, onValueChange, textSizeRatio = 0.2 }) => {
   const startDrag = (e) => {
     e.preventDefault();
     let startY;
+    const initialValue = sliderValue ?? 0;
     if (e.type === 'mousedown') {
       startY = e.clientY;
     } else if (e.type === 'touchstart') {
@@ -53,8 +56,8 @@ const VerticalSlider = ({ id, value, onValueChange, textSizeRatio = 0.2 }) => {
 
       const deltaY = startY - currentY;
       const slider = sliderRef.current.getBoundingClientRect();
-      const percentage = convertRange(0, slider.height, 0, 100, deltaY);
-      const newValue = Math.min(Math.max(0, percentage), 100) / 100;
+      const deltaPct = convertRange(0, slider.height, 0, 100, deltaY) / 100;
+      const newValue = Math.min(Math.max(0, initialValue + deltaPct), 1);
 
       setSliderValue(newValue);
       onValueChange && onValueChange(newValue);

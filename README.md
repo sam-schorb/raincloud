@@ -1,70 +1,17 @@
-# Getting Started with Create React App
+# RainCloud
 
-This project was bootstrapped with [Create React App](https://github.com/facebook/create-react-app).
+RainCloud is a web app to share RNBO patches. Upload an exported patch, map its parameters to knobs, sliders, buttons, and meters, lay out the interface, then share it so other artists can try it instantly.
 
-## Available Scripts
+## What It Does
+- Patch library with search, tag filters, and sort options (newest, popular, random) to surface interesting devices fast.
+- Browser RNBO player that spins up an AudioContext, loads the selected patch, and wires UI widgets to parameters and outports.
+- Layout builder powered by GridStack: drag and resize controls, pick column counts, toggle labels, and save per-patch layouts.
+- Creator upload flow that captures metadata, tags, images, optional links, and auto-generates a starter UI mapping from the patch description.
+- Artist pages with profile pictures plus a dedicated device page showing descriptions, tags, images, and a comment thread.
+- Accounts with email verification, login/logout, password reset, and a recently played list tied to each user.
+- Social features: like/favourite patches, manage your own uploads, edit metadata, delete patches you own, and view what you’ve liked.
 
-In the project directory, you can run:
-
-### `npm start`
-
-Runs the app in the development mode.\
-Open [http://localhost:3000](http://localhost:3000) to view it in your browser.
-
-The page will reload when you make changes.\
-You may also see any lint errors in the console.
-
-### `npm test`
-
-Launches the test runner in the interactive watch mode.\
-See the section about [running tests](https://facebook.github.io/create-react-app/docs/running-tests) for more information.
-
-### `npm run build`
-
-Builds the app for production to the `build` folder.\
-It correctly bundles React in production mode and optimizes the build for the best performance.
-
-The build is minified and the filenames include the hashes.\
-Your app is ready to be deployed!
-
-See the section about [deployment](https://facebook.github.io/create-react-app/docs/deployment) for more information.
-
-### `npm run eject`
-
-**Note: this is a one-way operation. Once you `eject`, you can't go back!**
-
-If you aren't satisfied with the build tool and configuration choices, you can `eject` at any time. This command will remove the single build dependency from your project.
-
-Instead, it will copy all the configuration files and the transitive dependencies (webpack, Babel, ESLint, etc) right into your project so you have full control over them. All of the commands except `eject` will still work, but they will point to the copied scripts so you can tweak them. At this point you're on your own.
-
-You don't have to ever use `eject`. The curated feature set is suitable for small and middle deployments, and you shouldn't feel obligated to use this feature. However we understand that this tool wouldn't be useful if you couldn't customize it when you are ready for it.
-
-## Learn More
-
-You can learn more in the [Create React App documentation](https://facebook.github.io/create-react-app/docs/getting-started).
-
-To learn React, check out the [React documentation](https://reactjs.org/).
-
-### Code Splitting
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/code-splitting](https://facebook.github.io/create-react-app/docs/code-splitting)
-
-### Analyzing the Bundle Size
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/analyzing-the-bundle-size](https://facebook.github.io/create-react-app/docs/analyzing-the-bundle-size)
-
-### Making a Progressive Web App
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/making-a-progressive-web-app](https://facebook.github.io/create-react-app/docs/making-a-progressive-web-app)
-
-### Advanced Configuration
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/advanced-configuration](https://facebook.github.io/create-react-app/docs/advanced-configuration)
-
-### Deployment
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/deployment](https://facebook.github.io/create-react-app/docs/deployment)
-
-### `npm run build` fails to minify
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/troubleshooting#npm-run-build-fails-to-minify](https://facebook.github.io/create-react-app/docs/troubleshooting#npm-run-build-fails-to-minify)
+## Tech Notes
+- Frontend: React with Redux Toolkit, React Router, Tailwind, GridStack, and custom UI widgets for RNBO parameters.
+- Backend: Express + MongoDB for patches, layouts, likes, comments, and user auth; JWT-based sessions stored in HttpOnly cookies.
+- Email flows use Mailjet for verification and password resets. Asset uploads (patch JSON + JPG images) are validated and stored alongside patch metadata.
